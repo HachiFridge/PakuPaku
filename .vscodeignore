@@ -1,0 +1,45 @@
+# Development files
+.vscode/**
+.vscode-test/**
+src/**
+webviews/**
+!webviews/dist/**
+
+# Source files (compiled output in /out)
+**/*.ts
+**/*.map
+
+# Configuration
+.gitignore
+.gitattributes
+.editorconfig
+.yarnrc
+.npmrc
+tsconfig.json
+.eslintrc.json
+**/.eslintrc.json
+
+# Build scripts
+build.mjs
+node-pre-gyp.js
+
+# Documentation
+vsc-extension-quickstart.md
+README.md
+
+# CI/CD
+.github/**
+
+# Dependencies
+node_modules/**
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db

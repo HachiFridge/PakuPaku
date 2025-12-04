@@ -1,0 +1,342 @@
+{
+  "name": "pakupaku",
+  "displayName": "Pakupaku",
+  "publisher": "HachiFridge",
+  "description": "Honse game translation tool",
+  "repository": {
+    "url": "https://github.com/HachiFridge/Pakupaku"
+  },
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "icon": "assets/icon.png",
+  "activationEvents": [
+    "workspaceContains:localized_data/config.json"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pakupaku",
+          "title": "PakuPaku",
+          "icon": "assets/activity_bar_icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "pakupaku": [
+        {
+          "id": "inactive",
+          "name": "Inactive",
+          "when": "!pakupaku.active"
+        },
+        {
+          "id": "stories",
+          "name": "All stories",
+          "visibility": "collapsed",
+          "when": "pakupaku.active"
+        },
+        {
+          "id": "home-stories",
+          "name": "Home dialogues",
+          "visibility": "collapsed",
+          "when": "pakupaku.active"
+        },
+        {
+          "id": "main-stories",
+          "name": "Main stories",
+          "visibility": "collapsed",
+          "when": "pakupaku.active"
+        },
+        {
+          "id": "localize-dict",
+          "name": "Localize dict",
+          "visibility": "collapsed",
+          "when": "pakupaku.active"
+        },
+        {
+          "id": "mdb",
+          "name": "MDB",
+          "visibility": "collapsed",
+          "when": "pakupaku.active"
+        },
+        {
+          "id": "lyrics",
+          "name": "Lyrics",
+          "visibility": "collapsed",
+          "when": "pakupaku.active"
+        },
+        {
+          "id": "hachimi-controls",
+          "name": "Hachimi Controls",
+          "visibility": "collapsed",
+          "when": "pakupaku.active"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "inactive",
+        "contents": "PakuPaku has not been enabled for this workspace.\n[Enable](command:pakupaku.enable)"
+      },
+      {
+        "view": "localize-dict",
+        "contents": "[Open editor](command:pakupaku.openLocalizeDictEditor)"
+      },
+      {
+        "view": "hachimi-controls",
+        "contents": "[Reload localized data](command:pakupaku.hachimi.reloadLocalizedData)\n[Set translation folder](command:pakupaku.hachimi.setLocalizedDataDir)\n[Revert translation folder](command:pakupaku.hachimi.revertLocalizedDataDir)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "pakupaku.stories.refresh",
+          "when": "view == stories",
+          "group": "navigation"
+        },
+        {
+          "command": "pakupaku.homeStories.refresh",
+          "when": "view == home-stories",
+          "group": "navigation"
+        },
+        {
+          "command": "pakupaku.mainStories.refresh",
+          "when": "view == main-stories",
+          "group": "navigation"
+        },
+        {
+          "command": "pakupaku.lyrics.refresh",
+          "when": "view == lyrics",
+          "group": "navigation"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "pakupaku.enable",
+        "title": "PakuPaku: Enable"
+      },
+      {
+        "command": "pakupaku.openLocalizeDictEditor",
+        "title": "PakuPaku: Open localize dict editor"
+      },
+      {
+        "command": "pakupaku.openLyricsEditor",
+        "title": "PakuPaku: Open lyrics editor"
+      },
+      {
+        "command": "pakupaku.openMdbEditor",
+        "title": "PakuPaku: Open MDB editor"
+      },
+      {
+        "command": "pakupaku.openRaceStoryEditor",
+        "title": "PakuPaku: Open race story editor"
+      },
+      {
+        "command": "pakupaku.openStoryEditor",
+        "title": "PakuPaku: Open story editor"
+      },
+      {
+        "command": "pakupaku.runAllAutomations",
+        "title": "PakuPaku: Run all automations"
+      },
+      {
+        "command": "pakupaku.runAutomation",
+        "title": "PakuPaku: Run automation..."
+      },
+      {
+        "command": "pakupaku.clearCache",
+        "title": "PakuPaku: Clear cache"
+      },
+      {
+        "command": "pakupaku.hachimi.reloadLocalizedData",
+        "title": "PakuPaku: (Hachimi) Reload localized data"
+      },
+      {
+        "command": "pakupaku.hachimi.setLocalizedDataDir",
+        "title": "PakuPaku: (Hachimi) Set localized data dir"
+      },
+      {
+        "command": "pakupaku.hachimi.revertLocalizedDataDir",
+        "title": "PakuPaku: (Hachimi) Revert localized data dir"
+      },
+      {
+        "command": "pakupaku.stories.refresh",
+        "title": "PakuPaku: Refresh All Stories view",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "pakupaku.homeStories.refresh",
+        "title": "PakuPaku: Refresh Home Dialogues view",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "pakupaku.mainStories.refresh",
+        "title": "PakuPaku: Refresh Main Stories view",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "pakupaku.lyrics.refresh",
+        "title": "PakuPaku: Refresh Lyrics view",
+        "icon": "$(refresh)"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "pakupaku.localizeDictEditor",
+        "displayName": "Localize Dict Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.json"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "pakupaku.lyricsEditor",
+        "displayName": "Lyrics Editor",
+        "selector": [
+          {
+            "filenamePattern": "m????_lyrics.json"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "pakupaku.mdbEditor",
+        "displayName": "MDB Editor",
+        "selector": [
+          {
+            "filenamePattern": "{text_data,character_system_text,race_jikkyo_comment,race_jikkyo_message}*.json"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "pakupaku.raceStoryEditor",
+        "displayName": "Race Story Editor",
+        "selector": [
+          {
+            "filenamePattern": "storyrace_?????????.json"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "pakupaku.storyEditor",
+        "displayName": "Story Editor",
+        "selector": [
+          {
+            "filenamePattern": "{storytimeline_?????????.json,hometimeline_?????_??_???????.json}"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "configuration": {
+      "title": "PakuPaku",
+      "properties": {
+        "pakupaku.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Must be enabled per workspace. User settings value is ignored."
+        },
+        "pakupaku.gameDataDir": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Path to the game's data directory. Usually located at C:\\Users\\[YOURUSERNAME]\\AppData\\LocalLow\\Cygames\\umamusume. Only the 'meta' file and the 'master' folder is required to be present in this directory, so if you don't want PakuPaku to mess with the game's data dir, you can symlink them to a different folder and use that as the data directory instead."
+        },
+        "pakupaku.localizeDictDump": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Path to a localize_dump.json file. You can dump the localize dict by launching the game, open the Hachimi menu and enable Translator mode in the config editor (if you haven't already), then under the Translation section, select the 'Dump localize dict' option. The dumped file will be saved in the 'hachimi' folder inside the game's install directory. You should do this every time the game updates to populate it with new data!"
+        },
+        "pakupaku.autoDownloadBundles": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine",
+          "description": "Automatically download asset bundles that haven't been downloaded yet."
+        },
+        "pakupaku.sqlite3": {
+          "type": "string",
+          "default": "sqlite3",
+          "description": "SQLite3 command or executable path."
+        },
+        "pakupaku.useGameFont": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use the game's font in editors."
+        },
+        "pakupaku.customFont": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Path to a custom font file to be used in editors."
+        },
+        "pakupaku.hachimiIpcAddress": {
+          "type": "string",
+          "default": "127.0.0.1",
+          "scope": "machine",
+          "description": "The Hachimi IPC address to connect to (not including the port). By default, it connects to Hachimi running on your local machine. To use a remote device, enable IPC and \"IPC listen all\" in Hachimi, and set the address to the remote device's address."
+        },
+        "pakupaku.decryption.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable decryption for encrypted 'meta' database and asset bundles."
+        },
+        "pakupaku.decryption.metaKey": {
+          "type": "string",
+          "default": "",
+          "description": "The decryption key (hex string) for the 'meta' database. If left empty, a default key will be used.",
+          "format": "password"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "pnpm run wv:build && node build.mjs",
+    "watch": "run-p wv:watch ts:watch",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "typecheck": "tsc -p . --noEmit",
+    "package": "vsce package --no-dependencies",
+    "wv:build": "cd webviews && pnpm run build",
+    "wv:watch": "cd webviews && pnpm run build --watch",
+    "wv:check": "pnpm -C webviews run check",
+    "clean": "node -e \"const fs=require('fs');try{fs.rmSync('out',{recursive:true,force:true})}catch{};try{fs.rmSync('webviews/dist',{recursive:true,force:true})}catch{}\"",
+    "ts:watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/follow-redirects": "^1.14.4",
+    "@types/json-to-ast": "^2.1.4",
+    "@types/node": "20.x",
+    "@types/tar": "^6.1.13",
+    "@types/vscode": "^1.90.0",
+    "@typescript-eslint/eslint-plugin": "^8.14.0",
+    "@typescript-eslint/parser": "^8.14.0",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0",
+    "esbuild-plugin-copy": "^2.1.1",
+    "eslint": "^9.15.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "cricodecs": "^1.0.2",
+    "csv-parse": "^5.5.5",
+    "csv-parser": "^2.3.5",
+    "follow-redirects": "^1.15.6",
+    "json-to-ast": "^2.1.0",
+    "pymport": "1.6.0-rc.2",
+    "tar": "^6.2.1"
+  }
+}

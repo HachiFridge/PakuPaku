@@ -1,0 +1,304 @@
+name: Extension Builder
+
+# Workflow triggers:
+# - Automatic: Push to main with changes to extension files
+# - Pull requests: For CI validation
+# - Manual: workflow_dispatch button in GitHub Actions UI
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'webviews/**'
+      - 'assets/**'
+      - 'bin/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.eslintrc.json'
+      - 'build.mjs'
+      - '.vscode/**'
+      - 'vsc-extension-quickstart.md'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'webviews/**'
+      - 'assets/**'
+      - 'bin/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.eslintrc.json'
+      - 'build.mjs'
+      - '.vscode/**'
+      - 'vsc-extension-quickstart.md'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type (for manual trigger)'
+        required: false
+        default: 'auto'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      actions: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Update pnpm lock file if dependencies changed
+        run: |
+          set -e
+          # Check if package.json has changed since HEAD~1
+          if git diff HEAD~1 HEAD --name-only 2>/dev/null | grep -qE "^package\.json|^webviews/package\.json"; then
+            echo "📦 Dependencies changed, updating lock files..."
+            pnpm install --frozen-lockfile=false
+            
+            # Update webviews lock file separately if needed
+            if git diff HEAD~1 HEAD --name-only | grep -q "^webviews/package.json"; then
+              echo "📦 Updating webviews lock file..."
+              pnpm --filter webviews install --frozen-lockfile=false
+            fi
+          else
+            echo "✓ No package.json changes detected"
+          fi
+
+      - name: Commit and push pnpm lock file changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if lock files have changes
+          if ! git diff --quiet -- pnpm-lock.yaml webviews/pnpm-lock.yaml 2>/dev/null; then
+            echo "🔄 Lock file changes detected, committing and pushing..."
+            git add pnpm-lock.yaml webviews/pnpm-lock.yaml
+            git commit -m "chore: update pnpm lock files [skip ci]"
+            git push origin HEAD:main
+            echo "✓ Lock files updated and pushed"
+          else
+            echo "✓ No lock file changes, proceeding with build"
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install webview dependencies
+        working-directory: ./webviews
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        continue-on-error: true
+        run: pnpm run lint
+
+      - name: Compile extension
+        run: pnpm run compile
+
+      - name: Determine release and next versions
+        id: version
+        run: |
+          cat > /tmp/version.js << 'EOF'
+          const { execSync } = require('child_process');
+          const fs = require('fs');
+
+          // Increment version following: 1.0.0 -> 1.0.1 -> ... -> 1.0.5 -> 1.1.0 -> ... -> 1.1.5 -> 1.2.0 -> ... -> 1.5.5 -> 2.0.0
+          function inc(v) {
+            const parts = v.split('.').map(n => parseInt(n, 10) || 0);
+            let [major, minor, patch] = parts;
+            
+            // Increment patch
+            patch++;
+            
+            // If patch exceeds 5, reset and increment minor
+            if (patch > 5) {
+              patch = 0;
+              minor++;
+            }
+            
+            // If minor exceeds 5, reset and increment major
+            if (minor > 5) {
+              minor = 0;
+              major++;
+              patch = 0; // Ensure patch is reset when major increments
+            }
+            
+            return `${major}.${minor}.${patch}`;
+          }
+
+          // Compare two semantic versions
+          function cmp(a, b) {
+            const A = a.split('.').map(Number);
+            const B = b.split('.').map(Number);
+            for (let i = 0; i < 3; i++) {
+              if (A[i] > B[i]) return 1;
+              if (A[i] < B[i]) return -1;
+            }
+            return 0;
+          }
+
+          // Get the latest git tag
+          function latestTag() {
+            try {
+              const out = execSync("git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1", { encoding: 'utf8' }).trim();
+              return out || 'v1.0.0';
+            } catch (e) {
+              return 'v1.0.0';
+            }
+          }
+
+          // Check if a tag already exists
+          function tagExists(v) {
+            try {
+              execSync(`git rev-parse -q --verify refs/tags/v${v}`);
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+
+          const rawLatest = latestTag().replace(/^v/, '');
+          let candidate = inc(rawLatest);
+
+          // Use package.json version if it's higher than the incremented latest
+          try {
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            if (cmp(pkg.version, candidate) > 0) {
+              candidate = pkg.version;
+            }
+          } catch (e) {}
+
+          // Ensure the chosen version doesn't already have a tag
+          while (tagExists(candidate)) {
+            candidate = inc(candidate);
+          }
+
+          const release = candidate;
+          const next = inc(release);
+
+          console.log(`RELEASE_VERSION=${release}`);
+          console.log(`NEXT_VERSION=${next}`);
+          console.log(`RELEASE_TAG=v${release}`);
+          EOF
+          
+          node /tmp/version.js >> $GITHUB_OUTPUT
+
+      - name: Set package.json to release version (for packaging)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.RELEASE_VERSION }}
+        run: |
+          echo "📝 Setting package.json to version $RELEASE_VERSION"
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = process.env.RELEASE_VERSION;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('✓ Updated package.json to', pkg.version);
+          "
+
+      - name: Package extension
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: pnpm run package
+
+      - name: Upload VSIX artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pakupaku-vsix
+          path: '*.vsix'
+          retention-days: 30
+
+      - name: Generate changelog
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: changelog
+        run: |
+          LATEST_TAG=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)
+          if [ -z "$LATEST_TAG" ]; then
+            # If no previous tag exists, get all commits
+            CHANGELOG=$(git log --oneline --no-decorate)
+          else
+            # Get commits since the latest tag
+            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --oneline --no-decorate)
+          fi
+          
+          # If no commits, provide a default message
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="No new commits"
+          fi
+          
+          # Write to file and read back to handle multiline properly
+          echo "$CHANGELOG" > /tmp/changelog.txt
+          {
+            echo 'CHANGELOG<<EOF'
+            cat /tmp/changelog.txt
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+          
+          # Count commits for reference
+          COMMIT_COUNT=$(echo "$CHANGELOG" | wc -l)
+          echo "COMMIT_COUNT=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: '*.vsix'
+          tag_name: ${{ steps.version.outputs.RELEASE_TAG }}
+          name: Release ${{ steps.version.outputs.RELEASE_TAG }}
+          body: |
+            ## Version ${{ steps.version.outputs.RELEASE_VERSION }}
+            
+            ### Changelog
+            
+            ${{ steps.changelog.outputs.CHANGELOG }}
+            
+            ---
+            
+            **Total commits:** ${{ steps.changelog.outputs.COMMIT_COUNT }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump package.json to next version and push
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📝 Preparing package.json for next version: $NEXT_VERSION"
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = process.env.NEXT_VERSION;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('✓ Updated package.json to', pkg.version);
+          "
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- package.json; then
+            echo "✓ package.json already at $NEXT_VERSION, no commit needed"
+          else
+            git add package.json
+            git commit -m "chore: bump version to $NEXT_VERSION [skip ci]"
+            git push origin HEAD:main
+            echo "✓ Version bumped and pushed"
+          fi
+
