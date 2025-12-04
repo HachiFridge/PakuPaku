@@ -167,7 +167,7 @@ export class LyricsEditorProvider extends EditorBase implements vscode.CustomTex
         const lyricsData = await extractLyricsData({
             assetPath: absoluteAssetPath,
             assetName: lyricsAssetName,
-            useDecryption: !!useDecryption,
+            useDecryption: useDecryption,
             metaPath: absoluteMetaPath,
             bundleHash: hash,
             metaKey: metaKey

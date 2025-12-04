@@ -1,10 +1,10 @@
 {
   "name": "pakupaku",
-  "displayName": "Pakupaku",
+  "displayName": "PakuPaku",
   "publisher": "HachiFridge",
   "description": "Honse game translation tool",
   "repository": {
-    "url": "https://github.com/HachiFridge/Pakupaku"
+    "url": "https://github.com/HachiFridge/PakuPaku"
   },
   "version": "1.0.0",
   "engines": {

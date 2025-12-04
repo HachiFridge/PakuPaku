@@ -128,11 +128,9 @@ interface ExtractStoryDataParams {
     metaKey?: string;
 }
 
-
 async function getMetaKeyIfEnabled(useDecryption: boolean): Promise<string | undefined> {
     return useDecryption ? SQLite.getMetaKey() : undefined;
 }
-
 
 export async function loadBundle(
     args: ExtractStoryDataParams

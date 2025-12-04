@@ -14,7 +14,12 @@
             {#if action == null}
                 <div class="separator"></div>
             {:else}
-                <button type="button" class="codicon codicon-{action.icon}" title={action.tooltip} aria-label={action.tooltip} on:click={action.onClick}></button>
+                <button type="button"
+                    class="codicon codicon-{action.icon}"
+                    title={action.tooltip}
+                    aria-label={action.tooltip}
+                    on:click={action.onClick}>
+                </button>
             {/if}
         {/each}
     </div>

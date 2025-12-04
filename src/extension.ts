@@ -6,9 +6,9 @@ import tar from 'tar';
 import { spawn } from "child_process";
 
 import downloader from './core/downloader';
-import { getAllGameInstallPaths } from './core/utils';
+import { getAllGameInstallPaths, expandEnvironmentVariables } from './core/utils';
 import config, { CONFIG_SECTION } from './config';
-import { setReady } from './extensionContext';
+import { whenReady, setReady } from './extensionContext';
 import { PAKUPAKU_DIR, PYMPORT_DIR, PYMPORT_INSTALLED_FILE, PYMPORT_VER, UNITYPY_VER, APSW_VER } from "./defines";
 import { initPythonBridge, getUnityPyVersion, checkApsw } from './pythonBridge';
 // Any other module from this package must be imported dynamically,
@@ -118,7 +118,6 @@ async function checkGameDataDir() {
     if (config().get("gameDataDir")) { return; }
 
     const foundGameDataDirs: string[] = [];
-
     const potentialDataDirs = new Set<string>();
 
     const localLowBase = path.join(os.homedir(), "AppData", "LocalLow", "Cygames");
@@ -243,7 +242,7 @@ async function activateCore(context: vscode.ExtensionContext) {
     const { registerCommands } = await import("./commands.js");
     const { registerEditors } = await import("./editors/index.js");
     const { registerViews } = await import("./views/index.js");
-    
+
     const disposables = [
         ...registerCommands(context),
         ...registerEditors(context),
@@ -269,7 +268,7 @@ async function registerCoreComponents(context: vscode.ExtensionContext) {
     const { registerCommands } = await import("./commands.js");
     const { registerEditors } = await import("./editors/index.js");
     const { registerViews } = await import("./views/index.js");
-    
+
     context.subscriptions.push(
         ...registerCommands(context),
         ...registerEditors(context),

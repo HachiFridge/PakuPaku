@@ -59,7 +59,7 @@ def handle_extract_race_story_data(params):
 
     text_asset_ptr = container[asset_name_in_bundle].asset
     text_asset = text_asset_ptr.read()
-    
+
     texts = [item.text for item in text_asset.textData]
     return {"texts": texts}
 
@@ -91,11 +91,11 @@ def handle_query_db(params):
     if not db_path:
         raise ValueError("'db_path' parameter is missing")
     query = params.get('query')
-
     key = params.get('key')
+
     if not key:
         raise ValueError("'key' parameter is missing for query_db")
-    
+
     db_uri = Path(db_path).as_uri()
     conn_str = f"{db_uri}?mode=ro&hexkey={key}"
     db = apsw.Connection(conn_str, flags=apsw.SQLITE_OPEN_URI | apsw.SQLITE_OPEN_READONLY)

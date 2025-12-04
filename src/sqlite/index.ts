@@ -54,7 +54,7 @@ class SQLite {
         return this.metaPath;
     }
 
-        public static async getMetaKey(): Promise<string> {
+    public static async getMetaKey(): Promise<string> {
         if (this.detectedMetaKey) {
             return this.detectedMetaKey;
         }
@@ -133,9 +133,7 @@ class SQLite {
             try {
                 const key = await SQLite.getMetaKey();
                 const absoluteMetaPath = resolvePath(this.metaPath);
-
                 return await queryEncryptedDb(absoluteMetaPath, query, key);
-
             } catch (e) {
                 const err = e as Error;
                 window.showErrorMessage(`Failed to query encrypted meta DB: ${err.message}`);

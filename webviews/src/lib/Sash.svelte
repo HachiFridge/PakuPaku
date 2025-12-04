@@ -50,7 +50,11 @@
     }
 </script>
 
-<div class="sash" class:horizontal class:left class:top role="slider" aria-label="Resize panel" aria-orientation={horizontal ? 'horizontal' : 'vertical'} aria-valuemin={minSize} aria-valuemax={maxSize} aria-valuenow={size} tabindex="0" on:mousedown={onMouseDown} on:mouseup={onMouseUp} on:keydown={onKeyDown}>
+<div class="sash" 
+    class:horizontal class:left class:top role="slider" 
+    aria-label="Resize panel" aria-orientation={horizontal ? 'horizontal' : 'vertical'}
+    aria-valuemin={minSize} aria-valuemax={maxSize} aria-valuenow={size} tabindex="0" 
+    on:mousedown={onMouseDown} on:mouseup={onMouseUp} on:keydown={onKeyDown}>
 </div>
 
 <style>

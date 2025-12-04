@@ -8,7 +8,6 @@ import { spawn } from 'child_process';
 import config from '../config';
 import { STEAM_APP_ID_GLOBAL, STEAM_APP_ID_JP } from '../defines';
 
-
 export function addIndent(source: string, indent: string, addAtStart = false): string {
     if (indent.length) {
         let res = addAtStart ? indent : "";
@@ -137,7 +136,6 @@ export async function getAllGameInstallPaths(): Promise<string[]> {
     catch {}
 
     if (os.platform() === 'win32') {
-
         const steamAppIds = [STEAM_APP_ID_JP, STEAM_APP_ID_GLOBAL];
 
         for (const appId of steamAppIds) {
@@ -166,7 +164,7 @@ export async function getGameInstallPath(): Promise<string | undefined> {
         cachedInstallPath = allPaths[0];
         return cachedInstallPath;
     }
-    
+
     return undefined;
 }
 
@@ -210,12 +208,12 @@ export function expandEnvironmentVariables(pathString: string): string {
         });
     } else {
         let expandedPath = pathString.replace(/^~(?=$|\/|\\)/, os.homedir());
-        
+
         expandedPath = expandedPath.replace(/\$(?:(\w+)|\{([^}]+)\})/g, (match, varName, varNameInBraces) => {
             const actualVarName = varName || varNameInBraces;
             return process.env[actualVarName] || match;
         });
-        
+
         return expandedPath;
     }
 }

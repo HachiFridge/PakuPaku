@@ -414,7 +414,7 @@
         display: flex;
     }
 
-.search-expand-btn {
+    .search-expand-btn {
         height: 100%;
         display: flex;
         align-items: center;

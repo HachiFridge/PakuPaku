@@ -3,6 +3,8 @@ import path from "path";
 import fs from "fs/promises";
 import downloader from "./downloader";
 import config from "../config";
+import { loadBundle as loadBundleViaBridge } from '../pythonBridge';
+import { resolve as resolvePath } from 'path';
 import { whenReady } from '../extensionContext';
 
 async function getAssetHash(name: string) {
@@ -61,8 +63,7 @@ async function getBundleDownloadUrl(platform: string, hash: string) {
 async function loadGenericAsset(name: string): Promise<string> {
     let hash = await getAssetHash(name);
     if (hash) {
-        // For generic assets, ensure the asset is downloaded and return its local path
-        return ensureAssetDownloaded(hash, true);
+        return loadGenericAssetByHash(hash);
     }
     else {
         throw new Error("Failed to resolve generic asset with name: " + name);

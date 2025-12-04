@@ -215,7 +215,7 @@ export class RaceStoryEditorProvider extends EditorBase implements vscode.Custom
         const raceData = await extractRaceStoryData({
             assetPath: absoluteAssetPath,
             assetName: assetName,
-            useDecryption: !!useDecryption,
+            useDecryption: useDecryption,
             metaPath: absoluteMetaPath,
             bundleHash: hash,
             metaKey: metaKey
