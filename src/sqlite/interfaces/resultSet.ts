@@ -1,4 +1,4 @@
-import { Statement } from "./statement";
+import { Statement } from './statement';
 
 export type ResultSet = Array<{
     statement: Statement;
@@ -8,8 +8,8 @@ export type ResultSet = Array<{
 }>;
 
 interface ResultData {
-    //time: string;
+    // time: string;
     header: string[];
     rows: string[][];
-    //raw: string;
+    // raw: string;
 }

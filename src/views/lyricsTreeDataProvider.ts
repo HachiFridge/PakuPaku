@@ -4,25 +4,25 @@ import { LocalizedDataManager, utils } from '../core';
 import RefreshableTreeDataProviderBase from './refreshableTreeDataProviderBase';
 import { whenReady } from '../extensionContext';
 
-const LYRICS_PATH_QUERY = "SELECT n FROM a WHERE n LIKE 'live/musicscores/%\\_lyrics' ESCAPE '\\'";
+const LYRICS_PATH_QUERY = 'SELECT n FROM a WHERE n LIKE \'live/musicscores/%\\_lyrics\' ESCAPE \'\\\'';
 
 export default class LyricsTreeDataProvider extends RefreshableTreeDataProviderBase implements vscode.TreeDataProvider<vscode.TreeItem> {
     private static _instance?: LyricsTreeDataProvider;
     static get instance(): LyricsTreeDataProvider | undefined { return this._instance; }
 
     static register(context: vscode.ExtensionContext): vscode.Disposable {
-        const treeDataProvider = new LyricsTreeDataProvider;
+        const treeDataProvider = new LyricsTreeDataProvider();
         LyricsTreeDataProvider._instance = treeDataProvider;
 
         const treeView = vscode.window.createTreeView('lyrics', {
-            treeDataProvider
+            treeDataProvider,
         });
-        
+
         treeDataProvider.initRefreshWatcher(treeView, async () => {
             const dir = await LocalizedDataManager.instancePromise
-                .then(m => m.getPathUri("assets_dir", undefined, "lyrics"));
+                .then(m => m.getPathUri('assets_dir', undefined, 'lyrics'));
             if (!dir) { return; }
-            return new vscode.RelativePattern(dir, "*.json");
+            return new vscode.RelativePattern(dir, '*.json');
         });
 
         return treeView;
@@ -50,7 +50,7 @@ export default class LyricsTreeDataProvider extends RefreshableTreeDataProviderB
             const path = row[0];
             const index = path.slice(-11, -7);
 
-            const dictPath = await ldManager.getPathUri("assets_dir", undefined, "lyrics", `m${index}_lyrics.json`);
+            const dictPath = await ldManager.getPathUri('assets_dir', undefined, 'lyrics', `m${index}_lyrics.json`);
             const dictExists = dictPath !== undefined && await utils.uriExists(dictPath);
 
             // Try to get the name of the song, otherwise use the index as the label
@@ -61,10 +61,10 @@ export default class LyricsTreeDataProvider extends RefreshableTreeDataProviderB
                 label,
                 tooltip: index,
                 command: {
-                    title: "PakuPaku: Open lyrics editor",
-                    command: "pakupaku.openLyricsEditor",
-                    arguments: [ index ]
-                }
+                    title: 'PakuPaku: Open lyrics editor',
+                    command: 'pakupaku.openLyricsEditor',
+                    arguments: [index],
+                },
             });
         }
 

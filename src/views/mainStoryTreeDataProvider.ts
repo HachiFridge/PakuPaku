@@ -12,7 +12,7 @@ function queryChapters(actNum: number) {
     return SQLite.instance.queryMdb(
         `SELECT DISTINCT "part_id"
         FROM main_story_data
-        WHERE "part_id" > ${actNum === 1 ? 0 : actNum * 10} AND "part_id" < ${(actNum + 1) * 10}`
+        WHERE "part_id" > ${actNum === 1 ? 0 : actNum * 10} AND "part_id" < ${(actNum + 1) * 10}`,
     );
 }
 
@@ -25,7 +25,7 @@ function queryStories(id: number) {
         `SELECT "story_type_1", "story_id_1", "story_type_2", "story_id_2", "story_type_3", "story_id_3",
         "story_type_4", "story_id_4", "story_type_5", "story_id_5"
         FROM main_story_data
-        WHERE "id" = ${id}`
+        WHERE "id" = ${id}`,
     );
 }
 
@@ -34,7 +34,7 @@ enum TreeLevel {
     Act,
     Chapter,
     Episode,
-    Story
+    Story,
 }
 
 export default class MainStoriesTreeDataProvider extends RefreshableTreeDataProviderBase implements vscode.TreeDataProvider<vscode.TreeItem> {
@@ -42,25 +42,25 @@ export default class MainStoriesTreeDataProvider extends RefreshableTreeDataProv
     static get instance(): MainStoriesTreeDataProvider | undefined { return this._instance; }
 
     static register(context: vscode.ExtensionContext): vscode.Disposable {
-        const treeDataProvider = new MainStoriesTreeDataProvider;
+        const treeDataProvider = new MainStoriesTreeDataProvider();
         MainStoriesTreeDataProvider._instance = treeDataProvider;
 
         const treeView = vscode.window.createTreeView('main-stories', {
-            treeDataProvider
+            treeDataProvider,
         });
 
         treeDataProvider.initRefreshWatcher(treeView, async () => {
             const dir = await LocalizedDataManager.instancePromise
-                .then(m => m.getPathUri("assets_dir", undefined, "story", "data"));
+                .then(m => m.getPathUri('assets_dir', undefined, 'story', 'data'));
             if (!dir) { return; }
-            return new vscode.RelativePattern(dir, "**/*.json");
+            return new vscode.RelativePattern(dir, '**/*.json');
         });
 
         treeDataProvider.initRefreshWatcher(treeView, async () => {
             const dir = await LocalizedDataManager.instancePromise
-                .then(m => m.getPathUri("assets_dir", undefined, "race", "storyrace", "text"));
+                .then(m => m.getPathUri('assets_dir', undefined, 'race', 'storyrace', 'text'));
             if (!dir) { return; }
-            return new vscode.RelativePattern(dir, "*.json");
+            return new vscode.RelativePattern(dir, '*.json');
         });
 
         return treeView;
@@ -76,9 +76,9 @@ export default class MainStoriesTreeDataProvider extends RefreshableTreeDataProv
         const items: vscode.TreeItem[] = [];
         if (!element) {
             // Acts
-            let result = await queryAllChapters();
-            let chapterRows = result[0].rows;
-            let lastChapter = chapterRows?.[chapterRows.length - 1]?.[0];
+            const result = await queryAllChapters();
+            const chapterRows = result[0].rows;
+            const lastChapter = chapterRows?.[chapterRows.length - 1]?.[0];
             if (lastChapter !== undefined) {
                 let actCount = Math.floor(+lastChapter / 10);
                 if (actCount < 1) { actCount = 1; }
@@ -87,29 +87,29 @@ export default class MainStoriesTreeDataProvider extends RefreshableTreeDataProv
                     items.push({
                         id: i.toString(),
                         tooltip: i.toString(),
-                        label: "Act " + i,
-                        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
+                        label: 'Act ' + i,
+                        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                     });
                 }
             }
         }
         else {
-            const components = element.id!.split("/");
+            const components = element.id!.split('/');
             const level = components.length as TreeLevel;
-            const [ actNum, chapterId, id ] = components;
+            const [actNum, chapterId, id] = components;
 
             switch (level) {
                 case TreeLevel.Act: {
                     const chapterNames = await utils.getTextDataCategory(93);
                     const result = await queryChapters(+actNum);
 
-                    for (let [ chapterId ] of result[0].rows) {
+                    for (const [chapterId] of result[0].rows) {
                         const itemId = `${actNum}/${chapterId}`;
                         items.push({
                             id: itemId,
                             tooltip: itemId,
                             label: chapterNames[+chapterId] ?? itemId,
-                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
+                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         });
                     }
 
@@ -119,13 +119,13 @@ export default class MainStoriesTreeDataProvider extends RefreshableTreeDataProv
                     const episodeNames = await utils.getTextDataCategory(94);
                     const result = await queryEpisodes(+chapterId);
 
-                    for (let [ id, episodeIndex ] of result[0].rows) {
+                    for (const [id, episodeIndex] of result[0].rows) {
                         const itemId = `${actNum}/${chapterId}/${id}`;
                         items.push({
                             id: itemId,
                             tooltip: itemId,
-                            label: `E${episodeIndex} - ${episodeNames[+id] ?? "Unknown"}`,
-                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
+                            label: `E${episodeIndex} - ${episodeNames[+id] ?? 'Unknown'}`,
+                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         });
                     }
                     break;
@@ -137,7 +137,7 @@ export default class MainStoriesTreeDataProvider extends RefreshableTreeDataProv
 
                     let noTranslatables = true;
                     for (let i = 0; i < 10; i += 2) {
-                        const [ storyType, storyId ] = row.map(v => +v).slice(i, i + 2);
+                        const [storyType, storyId] = row.map(v => +v).slice(i, i + 2);
                         if (storyType === 0) { break; }
 
                         const nStoryId = utils.normalizeStoryId(storyId);
@@ -146,26 +146,26 @@ export default class MainStoriesTreeDataProvider extends RefreshableTreeDataProv
                         let command: vscode.Command | undefined;
                         switch (storyType) {
                             case 1: { // normal story
-                                iconId = "book";
+                                iconId = 'book';
                                 const comp = utils.getStoryIdComponents(storyId);
-                                dictPath = await ldManager.getPathUri("assets_dir", undefined,
-                                    "story", "data", comp[0], comp[1], `storytimeline_${nStoryId}.json`);
+                                dictPath = await ldManager.getPathUri('assets_dir', undefined,
+                                    'story', 'data', comp[0], comp[1], `storytimeline_${nStoryId}.json`);
                                 command = {
-                                    title: "PakuPaku: Open story editor",
-                                    command: "pakupaku.openStoryEditor",
-                                    arguments: [ "story", nStoryId ]
+                                    title: 'PakuPaku: Open story editor',
+                                    command: 'pakupaku.openStoryEditor',
+                                    arguments: ['story', nStoryId],
                                 };
                                 break;
                             }
 
                             case 3: // race story
-                                iconId = "device-camera-video";
-                                dictPath = await ldManager.getPathUri("assets_dir", undefined,
-                                    "race", "storyrace", "text", `storyrace_${nStoryId}.json`);
+                                iconId = 'device-camera-video';
+                                dictPath = await ldManager.getPathUri('assets_dir', undefined,
+                                    'race', 'storyrace', 'text', `storyrace_${nStoryId}.json`);
                                 command = {
-                                    title: "PakuPaku: Open race story editor",
-                                    command: "pakupaku.openRaceStoryEditor",
-                                    arguments: [ nStoryId ]
+                                    title: 'PakuPaku: Open race story editor',
+                                    command: 'pakupaku.openRaceStoryEditor',
+                                    arguments: [nStoryId],
                                 };
                                 break;
 
@@ -181,7 +181,7 @@ export default class MainStoriesTreeDataProvider extends RefreshableTreeDataProv
                             tooltip: itemId,
                             label: utils.makeActiveStatusLabel(`Part ${(i / 2) + 1}`, dictExists),
                             iconPath: new vscode.ThemeIcon(iconId),
-                            command
+                            command,
                         });
                     }
 
@@ -190,7 +190,7 @@ export default class MainStoriesTreeDataProvider extends RefreshableTreeDataProv
                         items.push({
                             id: itemId,
                             tooltip: itemId,
-                            label: "No translatable parts."
+                            label: 'No translatable parts.',
                         });
                     }
                     break;

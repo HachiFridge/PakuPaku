@@ -1,1 +1,1 @@
-export * from "./objectReader";
+export * from './objectReader';

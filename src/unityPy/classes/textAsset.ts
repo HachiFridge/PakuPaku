@@ -1,6 +1,6 @@
-import { NamedObject } from "./namedObject";
+import { NamedObject } from './namedObject';
 
 export interface TextAsset extends NamedObject {
-    script: Buffer,
-    text: string
+    script: Buffer;
+    text: string;
 }

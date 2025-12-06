@@ -1,1 +1,1 @@
-export * from "./classIDType";
+export * from './classIDType';

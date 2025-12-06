@@ -16,8 +16,9 @@ webviews/**
 .yarnrc
 .npmrc
 tsconfig.json
-.eslintrc.json
+eslint.config.mjs
 **/.eslintrc.json
+lint_output.txt
 
 # Build scripts
 build.mjs

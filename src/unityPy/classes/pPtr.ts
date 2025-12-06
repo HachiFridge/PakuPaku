@@ -1,4 +1,4 @@
-import { ObjectReader } from "../files";
+import { ObjectReader } from '../files';
 
 export interface PPtr {
     // STUB

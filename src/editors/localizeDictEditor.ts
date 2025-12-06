@@ -14,39 +14,39 @@ export class LocalizeDictEditorProvider extends EditorBase implements vscode.Cus
         const provider = new LocalizeDictEditorProvider(context);
         return vscode.window.registerCustomEditorProvider(LocalizeDictEditorProvider.viewType, provider);
     }
-    
+
     resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken) {
         // Json document setup
-        let json = new JsonDocument<{[key: string]: string} | null>(document.uri, null, () => {
-            const [ _, subscribedKey ] = this.subscribedPath;
+        const json = new JsonDocument<{ [key: string]: string } | null>(document.uri, null, () => {
+            const [_, subscribedKey] = this.subscribedPath;
             const content = getDictValue(subscribedKey);
             postMessage({
-                type: "setTextSlotContent",
+                type: 'setTextSlotContent',
                 entryPath: this.subscribedPath,
                 index: 0,
-                content
+                content,
             });
             postMessage({
-                type: "setExists",
+                type: 'setExists',
                 path: this.subscribedPath,
-                exists: content !== null
+                exists: content !== null,
             });
         });
         this.disposables.push(json);
 
-        let initReadPromise = json.readTextDocument().catch(_ => {});
+        const initReadPromise = json.readTextDocument().catch((_) => {});
         json.watchTextDocument(document);
         function getDictProperty(id: TreeNodeId): jsonToAst.PropertyNode | undefined {
-            if (json.ast.type !== "Object" || typeof id !== "string") { return; }
+            if (json.ast.type !== 'Object' || typeof id !== 'string') { return; }
             return json.astObjectsProps.get(json.ast)?.[id];
         }
         function getDictValue(id: TreeNodeId): string | null {
             const valueNode = getDictProperty(id)?.value;
-            return (!valueNode || valueNode.type !== "Literal" || typeof valueNode.value !== "string") ?
-                null :
-                valueNode.value;
+            return (!valueNode || valueNode.type !== 'Literal' || typeof valueNode.value !== 'string')
+                ? null
+                : valueNode.value;
         }
-        
+
         // Init webview
         this.setupWebview(webviewPanel);
 
@@ -56,58 +56,58 @@ export class LocalizeDictEditorProvider extends EditorBase implements vscode.Cus
         }
 
         let prevEditPromise = Promise.resolve();
-        let nodesPromise = LocalizeDictEditorProvider.generateNodes();
+        const nodesPromise = LocalizeDictEditorProvider.generateNodes();
         webviewPanel.webview.onDidReceiveMessage((message: EditorMessage) => {
             switch (message.type) {
-                case "init":
-                    postMessage({ type: "setExplorerTitle", title: "Localize dict" });
+                case 'init':
+                    postMessage({ type: 'setExplorerTitle', title: 'Localize dict' });
                     // Just making sure to prevent data races
                     initReadPromise.finally(() => {
-                        nodesPromise.then(nodes => {
-                            postMessage({ type: "setNodes", nodes });
+                        nodesPromise.then((nodes) => {
+                            postMessage({ type: 'setNodes', nodes });
                         })
-                        .catch(e => vscode.window.showErrorMessage("" + e));
+                            .catch(e => vscode.window.showErrorMessage('' + e));
                     });
                     fontHelper.onInit(webviewPanel.webview);
                     break;
 
-                case "getTextSlotContent": {
-                    let [_, key] = message.entryPath;
+                case 'getTextSlotContent': {
+                    const [_, key] = message.entryPath;
                     postMessage({
-                        type: "setTextSlotContent",
+                        type: 'setTextSlotContent',
                         entryPath: message.entryPath,
                         index: message.index,
-                        content: getDictValue(key)
-                    });
-                    break;
-                }
-                
-                case "getExists": {
-                    let [_, key] = message.path;
-                    postMessage({
-                        type: "setExists",
-                        path: message.path,
-                        exists: getDictValue(key) !== null
+                        content: getDictValue(key),
                     });
                     break;
                 }
 
-                case "setTextSlotContent": {
-                    let [_, key] = message.entryPath;
-                    if (typeof key !== "string") { break; }
+                case 'getExists': {
+                    const [_, key] = message.path;
+                    postMessage({
+                        type: 'setExists',
+                        path: message.path,
+                        exists: getDictValue(key) !== null,
+                    });
+                    break;
+                }
+
+                case 'setTextSlotContent': {
+                    const [_, key] = message.entryPath;
+                    if (typeof key !== 'string') { break; }
 
                     // Wait for previous edit to finish before applying another
                     prevEditPromise = prevEditPromise.then(async () => {
                         try {
                             const applied = await json.applyEdit(
-                                makeEditForStringProperty(key, message.content)
+                                makeEditForStringProperty(key, message.content),
                             );
                             if (!applied) {
-                                vscode.window.showErrorMessage("Failed to apply edit");
+                                vscode.window.showErrorMessage('Failed to apply edit');
                             }
                         }
                         catch (e) {
-                            vscode.window.showErrorMessage("" + e);
+                            vscode.window.showErrorMessage('' + e);
                         }
                     });
                     break;
@@ -117,23 +117,23 @@ export class LocalizeDictEditorProvider extends EditorBase implements vscode.Cus
     }
 
     static async generateNodes(): Promise<ITreeNode[]> {
-        let dumpPath = config().get<string>("localizeDictDump");
+        const dumpPath = config().get<string>('localizeDictDump');
         if (!dumpPath) {
-            throw new Error("The path to the localize dict dump has not been set");
+            throw new Error('The path to the localize dict dump has not been set');
         }
-        let dumpJson = await fs.readFile(dumpPath, { encoding: "utf8" });
+        const dumpJson = await fs.readFile(dumpPath, { encoding: 'utf8' });
 
-        let dict: {[key: string]: string} = JSON.parse(dumpJson);
-        let nodes: ITreeNode[] = [];
-        let categoryMap: {[key: string]: IEntryTreeNode[]} = {};
+        const dict: { [key: string]: string } = JSON.parse(dumpJson);
+        const nodes: ITreeNode[] = [];
+        const categoryMap: { [key: string]: IEntryTreeNode[] } = {};
 
         for (const key in dict) {
             const value = dict[key];
-            if (typeof key !== "string" || typeof value !== "string") {
-                throw new Error("Malformed localize dict dump entry at: " + key);
+            if (typeof key !== 'string' || typeof value !== 'string') {
+                throw new Error('Malformed localize dict dump entry at: ' + key);
             }
 
-            let categoryName = "";
+            let categoryName = '';
             for (const c of key) {
                 if (c >= '0' && c <= '9') { break; }
                 categoryName += c;
@@ -143,11 +143,11 @@ export class LocalizeDictEditorProvider extends EditorBase implements vscode.Cus
             let prev: TreeNodeId | undefined;
             if (!categoryChildren) {
                 categoryChildren = [];
-                let node: ITreeNode = {
-                    type: "category",
+                const node: ITreeNode = {
+                    type: 'category',
                     id: categoryName,
                     name: categoryName,
-                    children: categoryChildren
+                    children: categoryChildren,
                 };
                 nodes.push(node);
                 categoryMap[categoryName] = categoryChildren;
@@ -159,16 +159,16 @@ export class LocalizeDictEditorProvider extends EditorBase implements vscode.Cus
             }
 
             categoryChildren.push({
-                type: "entry",
+                type: 'entry',
                 id: key,
                 name: key,
                 content: [
                     {
                         content: value,
-                        multiline: true
-                    }
+                        multiline: true,
+                    },
                 ],
-                prev
+                prev,
             });
         }
 
@@ -176,6 +176,6 @@ export class LocalizeDictEditorProvider extends EditorBase implements vscode.Cus
     }
 
     protected override getHtmlForWebview(webview: vscode.Webview): string {
-        return getEditorHtml(this.context.extensionUri, webview, "commonEditor", "Localize Dict Editor");
+        return getEditorHtml(this.context.extensionUri, webview, 'commonEditor', 'Localize Dict Editor');
     }
 }

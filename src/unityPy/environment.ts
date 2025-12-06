@@ -1,5 +1,5 @@
-import { Proxify } from "../pythonInterop";
-import { ObjectReader } from "./files";
+import { Proxify } from '../pythonInterop';
+import { ObjectReader } from './files';
 
 export interface Environment {
     objects: ObjectReader[];

@@ -2,6 +2,6 @@
 const os = require("os");
 const path = require("path");
 
-exports.find = function() {
-    return path.join(os.homedir(), ".zokuzoku", "pymport", "pymport.node");
+exports.find = function () {
+    return path.join(os.homedir(), ".pakupaku", "pymport", "pymport.node");
 };

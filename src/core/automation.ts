@@ -9,7 +9,7 @@ function runScript(code: string, filename?: string) {
 }
 
 async function runFile(scriptPath: string) {
-    return runScript(await fs.readFile(scriptPath, { encoding: "utf8" }), path.basename(scriptPath));
+    return runScript(await fs.readFile(scriptPath, { encoding: 'utf8' }), path.basename(scriptPath));
 }
 
 async function run(filename: string) {
@@ -20,7 +20,7 @@ async function run(filename: string) {
 async function runAll() {
     const scriptsDir = getScriptDir();
     for (const filename of await fs.readdir(scriptsDir)) {
-        if (filename.endsWith(".js")) {
+        if (filename.endsWith('.js')) {
             const scriptPath = path.join(scriptsDir, filename);
             await runFile(scriptPath);
         }
@@ -30,15 +30,15 @@ async function runAll() {
 async function getScripts() {
     const scriptsDir = getScriptDir();
     return (await fs.readdir(scriptsDir))
-        .filter(filename => filename.endsWith(".js"));
+        .filter(filename => filename.endsWith('.js'));
 }
 
 function getScriptDir() {
     const folderUri = vscode.workspace.workspaceFolders?.[0]?.uri;
     if (!folderUri) {
-        throw new Error("No workspace folder.");
+        throw new Error('No workspace folder.');
     }
-    return vscode.Uri.joinPath(folderUri, ".vscode", "pk_auto").fsPath;
+    return vscode.Uri.joinPath(folderUri, '.vscode', 'pk_auto').fsPath;
 }
 
 export default {
@@ -47,5 +47,5 @@ export default {
     run,
     runAll,
     getScripts,
-    getScriptDir
+    getScriptDir,
 };

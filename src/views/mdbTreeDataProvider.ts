@@ -4,7 +4,7 @@ import { MDB_TABLE_NAMES } from '../sqlite';
 export default class MdbTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     static register(context: vscode.ExtensionContext): vscode.Disposable {
         return vscode.window.createTreeView('mdb', {
-            treeDataProvider: new MdbTreeDataProvider
+            treeDataProvider: new MdbTreeDataProvider(),
         });
     }
 
@@ -13,15 +13,15 @@ export default class MdbTreeDataProvider implements vscode.TreeDataProvider<vsco
     }
 
     getChildren(element?: vscode.TreeItem): vscode.TreeItem[] {
-        return MDB_TABLE_NAMES.map(name => {
+        return MDB_TABLE_NAMES.map((name) => {
             return {
                 id: name,
                 label: name,
                 command: {
-                    title: "PakuPaku: Open MDB editor",
-                    command: "pakupaku.openMdbEditor",
-                    arguments: [ name ]
-                }
+                    title: 'PakuPaku: Open MDB editor',
+                    command: 'pakupaku.openMdbEditor',
+                    arguments: [name],
+                },
             };
         });
     }

@@ -1,15 +1,15 @@
-export * from "./localizedDataManager";
-export * from "./jsonDocument";
-export * as utils from "./utils"; // workaround, dynamic import woes
-export { default as downloader } from "./downloader";
+export * from './localizedDataManager';
+export * from './jsonDocument';
+export * as utils from './utils'; // workaround, dynamic import woes
+export { default as downloader } from './downloader';
 
 import * as vscode from 'vscode';
 import { LocalizedDataManager } from './localizedDataManager';
 
-export { default as automation } from "./automation";
+export { default as automation } from './automation';
 
 export function setActive(value: boolean) {
-    vscode.commands.executeCommand("setContext", "pakupaku.active", value);
+    vscode.commands.executeCommand('setContext', 'pakupaku.active', value);
 
     if (value) {
         LocalizedDataManager.init();
