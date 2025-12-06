@@ -21,6 +21,7 @@
         position: absolute;
         top: 35px;
         right: 8px;
+        z-index: 99;
         background-color: var(--vscode-editorWidget-background);
         box-shadow: 0 0 8px 2px var(--vscode-widget-shadow);
         border-bottom-left-radius: 4px;
