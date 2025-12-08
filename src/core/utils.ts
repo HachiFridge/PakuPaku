@@ -10,10 +10,10 @@ import { STEAM_APP_ID_GLOBAL, STEAM_APP_ID_JP } from '../defines';
 
 export function addIndent(source: string, indent: string, addAtStart = false): string {
     if (indent.length) {
-        let res = addAtStart ? indent : '';
+        let res = addAtStart ? indent : "";
         for (const c of source) {
             res += c;
-            if (c === '\n') {
+            if (c === "\n") {
                 res += indent;
             }
         }
@@ -25,11 +25,11 @@ export function addIndent(source: string, indent: string, addAtStart = false): s
 }
 
 export async function getTextDataCategory(category: number) {
-    const dict: { [key: number]: string } = {};
+    const dict: {[key: number]: string} = {};
     try {
         const mdbQueryRes = await SQLite.instance.queryMdb(`SELECT "index", "text" FROM text_data WHERE "category" = ${category}`);
         for (const row of mdbQueryRes[0].rows) {
-            const [index, text] = row;
+            const [ index, text ] = row;
             dict[+index] = text;
         }
     }
@@ -38,7 +38,7 @@ export async function getTextDataCategory(category: number) {
     return dict;
 }
 
-const textDataCache: { [key: number]: { [key: number]: string } } = {};
+const textDataCache: {[key: number]: {[key: number]: string}} = {};
 export async function getTextDataCategoryCached(category: number) {
     let cache = textDataCache[category];
     if (!cache) {
@@ -70,10 +70,10 @@ export async function pathExists(path: PathLike): Promise<boolean> {
 
 export function makeActiveStatusLabel(label: string, active: boolean) {
     if (active) {
-        return '[✔] ' + label;
+        return "[✔] " + label;
     }
     else {
-        return '[   ] ' + label;
+        return "[   ] " + label;
     }
 }
 
@@ -81,7 +81,7 @@ export function normalizeStoryId(id: string | number): string {
     id = id.toString();
     if (id.length < 9) {
         const count = 9 - id.length;
-        id = '0'.repeat(count) + id;
+        id = "0".repeat(count) + id;
     }
     return id;
 }
@@ -108,29 +108,27 @@ async function queryRegistry(key: string, value: string): Promise<string | undef
                 if (match && match[1]) {
                     const resolvedPath = expandEnvironmentVariables(match[1].trim());
                     resolve(resolvedPath);
-                }
-                else {
+                } else {
                     resolve(undefined);
                 }
             });
 
             reg.on('error', () => resolve(undefined));
-        }
-        catch (e) {
+        } catch (e) {
             resolve(undefined);
         }
     });
 }
 
-const DMM5_CONFIG_PATH = path.join(os.homedir(), 'AppData', 'Roaming', 'dmmgameplayer5', 'dmmgame.cnf');
+const DMM5_CONFIG_PATH = path.join(os.homedir(), "AppData", "Roaming", "dmmgameplayer5", "dmmgame.cnf");
 
 export async function getAllGameInstallPaths(): Promise<string[]> {
     const paths: string[] = [];
 
     try {
-        const dmmConfig = JSON.parse(await fs.readFile(DMM5_CONFIG_PATH, { encoding: 'utf8' }));
+        const dmmConfig = JSON.parse(await fs.readFile(DMM5_CONFIG_PATH, { encoding: "utf8" }));
         for (const entry of dmmConfig.contents) {
-            if (entry.productId === 'umamusume' && entry.detail.path) {
+            if (entry.productId === "umamusume" && entry.detail.path) {
                 paths.push(entry.detail.path);
             }
         }
@@ -171,24 +169,23 @@ export async function getGameInstallPath(): Promise<string | undefined> {
 }
 
 export async function updateHachimiConfig(callback: (config: any) => any) {
-    const dumpPath = config().get<string>('localizeDictDump');
+    const dumpPath = config().get<string>("localizeDictDump");
 
     if (!dumpPath) {
-        throw new Error('Cannot update Hachimi config: The \'Localize Dict Dump\' path is not configured. Please run the setup or set it manually in Settings.');
+        throw new Error("Cannot update Hachimi config: The 'Localize Dict Dump' path is not configured. Please run the setup or set it manually in Settings.");
     }
 
     const hachimiDir = path.dirname(dumpPath);
-    const configPath = path.join(hachimiDir, 'config.json');
+    const configPath = path.join(hachimiDir, "config.json");
 
     try {
-        const data = JSON.parse(await fs.readFile(configPath, { encoding: 'utf8' }));
+        const data = JSON.parse(await fs.readFile(configPath, { encoding: "utf8" }));
         const res = await callback(data);
         if (res) {
-            await fs.writeFile(configPath, JSON.stringify(res, null, 2), { encoding: 'utf8' });
+            await fs.writeFile(configPath, JSON.stringify(res, null, 2), { encoding: "utf8" });
         }
         return res;
-    }
-    catch (e: any) {
+    } catch (e: any) {
         if (e.code === 'ENOENT') {
             console.warn(`hachimi/config.json not found at ${configPath}. Skipping update.`);
             return;
@@ -209,8 +206,7 @@ export function expandEnvironmentVariables(pathString: string): string {
         return pathString.replace(/%(.*?)%/g, (match, varName) => {
             return process.env[varName] || match;
         });
-    }
-    else {
+    } else {
         let expandedPath = pathString.replace(/^~(?=$|\/|\\)/, os.homedir());
 
         expandedPath = expandedPath.replace(/\$(?:(\w+)|\{([^}]+)\})/g, (match, varName, varNameInBraces) => {

@@ -8,20 +8,20 @@ function downloadToStream(url: string | URL, title: string, output: Writable): T
     const progressOptions: vscode.ProgressOptions = {
         location: vscode.ProgressLocation.Notification,
         title,
-        cancellable: true,
+        cancellable: true
     };
     return vscode.window.withProgress(progressOptions, (progress, token) => {
         return new Promise((resolve, reject) => {
-            const req = https.get(url, { maxBodyLength: Infinity }, (res) => {
+            const req = https.get(url, { maxBodyLength: Infinity }, res => {
                 if (res.statusCode !== 200) {
-                    reject(new Error('Server returned status code: ' + res.statusCode));
+                    reject(new Error("Server returned status code: " + res.statusCode));
                     return;
                 }
 
                 const clHeader = res.headers['content-length'];
                 const contentLength = clHeader ? parseInt(clHeader, 10) : 100000;
 
-                res.on('data', (c) => {
+                res.on("data", c => {
                     const chunk = c as Buffer;
                     output.write(chunk);
                     if (clHeader) {
@@ -32,24 +32,24 @@ function downloadToStream(url: string | URL, title: string, output: Writable): T
                         progress.report({ increment: 1 });
                     }
                 })
-                    .on('end', () => {
-                        output.end();
-                        resolve();
-                    })
-                    .on('error', (e) => {
-                        res.destroy();
-                        reject(e);
-                    });
+                .on("end", () => {
+                    output.end();
+                    resolve();
+                })
+                .on("error", e => {
+                    res.destroy();
+                    reject(e);
+                });
 
                 token.onCancellationRequested(() => {
                     res.destroy();
-                    reject(new Error('Download cancelled by user'));
+                    reject(new Error("Download cancelled by user"));
                 });
             })
-                .on('error', (e) => {
-                    req.destroy();
-                    reject(e);
-                });
+            .on("error", e => {
+                req.destroy();
+                reject(e);
+            });
         });
     });
 }
@@ -73,5 +73,5 @@ async function downloadToFile(url: string | URL, title: string, filePath: fs.Pat
 
 export default {
     downloadToFile,
-    downloadToStream,
+    downloadToStream
 };

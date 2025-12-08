@@ -14,12 +14,9 @@
             {#if action == null}
                 <div class="separator"></div>
             {:else}
-                <button type="button"
-                    class="codicon codicon-{action.icon}"
-                    title={action.tooltip}
-                    aria-label={action.tooltip}
-                    on:click={action.onClick}>
-                </button>
+                <a role="button" tabindex=0 title={action.tooltip}
+                    class="codicon codicon-{action.icon}" on:click={action.onClick}>
+                </a>
             {/if}
         {/each}
     </div>
@@ -53,7 +50,7 @@
         display: flex;
     }
 
-    .actions-container button {
+    .actions-container a {
         margin-right: 4px;
         padding: 3px;
         width: 16px;
@@ -62,12 +59,9 @@
         overflow: visible;
         text-align: center;
         cursor: pointer;
-        background: none;
-        border: none;
-        color: inherit;
     }
     
-    .actions-container button:hover {
+    .actions-container a:hover {
         background-color: rgba(90, 93, 94, 0.31);
         border-radius: 5px;
     }

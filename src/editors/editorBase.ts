@@ -10,26 +10,26 @@ export class EditorBase {
     disposables: vscode.Disposable[] = [];
 
     constructor(
-        protected readonly context: vscode.ExtensionContext,
+        protected readonly context: vscode.ExtensionContext
     ) {
     }
 
     protected getHtmlForWebview(webview: vscode.Webview): string {
-        return '';
+        return "";
     }
 
     protected setupWebview(webviewPanel: vscode.WebviewPanel, extraLocalResourceRoots: vscode.Uri[] = []) {
         const webview = webviewPanel.webview;
-        const gameDataDir = config().get<string>('gameDataDir');
-        const customFont = config().get<string>('customFont');
+        const gameDataDir = config().get<string>("gameDataDir");
+        const customFont = config().get<string>("customFont");
         webview.options = {
             enableScripts: true,
             localResourceRoots: [
                 this.context.extensionUri,
-                ...(gameDataDir ? [vscode.Uri.file(gameDataDir)] : []),
-                ...(customFont ? [vscode.Uri.file(dirname(customFont))] : []),
-                ...extraLocalResourceRoots,
-            ],
+                ...(gameDataDir ? [ vscode.Uri.file(gameDataDir) ] : []),
+                ...(customFont ? [ vscode.Uri.file(dirname(customFont)) ] : []),
+                ...extraLocalResourceRoots
+            ]
         };
         webview.html = this.getHtmlForWebview(webview);
 
@@ -40,42 +40,42 @@ export class EditorBase {
         // Handle common messages
         webview.onDidReceiveMessage((message: EditorMessage) => {
             switch (message.type) {
-                case 'showMessage':
+                case "showMessage":
                     switch (message.messageType) {
                         default:
-                        case 'info':
+                        case "info":
                             vscode.window.showInformationMessage(message.content);
                             break;
-                        case 'warning':
+                        case "warning":
                             vscode.window.showWarningMessage(message.content);
                             break;
-                        case 'error':
+                        case "error":
                             vscode.window.showErrorMessage(message.content);
                             break;
                     }
                     break;
 
-                case 'subscribePath':
+                case "subscribePath":
                     this.subscribedPath = message.path;
                     break;
 
-                case 'callHachimiIpc':
+                case "callHachimiIpc":
                     HachimiIpc.callWithProgress(message.command)
-                        .catch(e => vscode.window.showErrorMessage('' + e));
+                        .catch(e => vscode.window.showErrorMessage("" + e));
                     break;
 
-                case 'showInputBox':
+                case "showInputBox":
                     vscode.window.showInputBox({ placeHolder: message.placeholder })
                         .then(result => postMessage({
-                            type: 'showInputBoxResult',
+                            type: "showInputBoxResult",
                             id: message.id,
-                            result,
+                            result
                         }));
                     break;
             }
         });
 
-        webviewPanel.onDidChangeViewState((action) => {
+        webviewPanel.onDidChangeViewState(action => {
             if (action.webviewPanel.active) {
                 EditorBase.activeWebview = action.webviewPanel.webview;
             }

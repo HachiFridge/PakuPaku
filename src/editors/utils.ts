@@ -11,35 +11,23 @@ export function getNonce(): string {
 }
 
 export function getAssetUris(extensionUri: vscode.Uri, webview: vscode.Webview, pageName: string) {
-    const distAssetsUri = vscode.Uri.joinPath(extensionUri, 'webviews', 'dist', 'assets');
+    const distAssetsUri = vscode.Uri.joinPath(extensionUri, "webviews", "dist", "assets");
     return {
         scriptUri: webview.asWebviewUri(vscode.Uri.joinPath(distAssetsUri, `${pageName}.js`)),
-        styleUri: webview.asWebviewUri(vscode.Uri.joinPath(distAssetsUri, `${pageName}.css`)),
+        styleUri: webview.asWebviewUri(vscode.Uri.joinPath(distAssetsUri, `${pageName}.css`))
     };
 }
 
 export function getEditorHtml(extensionUri: vscode.Uri, webview: vscode.Webview, pageName: string, pageTitle: string) {
     const { scriptUri, styleUri } = getAssetUris(extensionUri, webview, pageName);
-    const nonce = getNonce();
-    const csp = [
-        `default-src 'none'`,
-        `img-src ${webview.cspSource} https: data:`,
-        `style-src ${webview.cspSource} 'unsafe-inline'`,
-        `font-src ${webview.cspSource} data:`,
-        `connect-src ${webview.cspSource} https:`,
-        `media-src ${webview.cspSource}`,
-        `worker-src 'none'`,
-        `script-src 'nonce-${nonce}'`,
-    ].join('; ');
     return `
         <!doctype html>
         <html lang="en">
         <head>
             <meta charset="UTF-8" />
-            <meta http-equiv="Content-Security-Policy" content="${csp}">
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>${pageTitle}</title>
-            <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
+            <script type="module" nonce="${getNonce()}" src="${scriptUri}"></script>
             <link rel="stylesheet" href="${styleUri}">
         </head>
         <body>
@@ -50,53 +38,53 @@ export function getEditorHtml(extensionUri: vscode.Uri, webview: vscode.Webview,
 }
 
 export function makeEditForStringProperty(key: string, value: string | null): JsonEdit<any> {
-    const edit: JsonEdit<object> = value !== null
-        ? {
-                type: 'object',
-                action: 'update',
-                property: {
-                    key,
-                    value,
-                },
-            }
-        : {
-                type: 'object',
-                action: 'delete',
-                key,
-            };
+    const edit: JsonEdit<object> = value !== null ?
+    {
+        type: "object",
+        action: "update",
+        property: {
+            key,
+            value
+        }
+    } :
+    {
+        type: "object",
+        action: "delete",
+        key
+    };
     return edit;
 }
 
 export function makeUpdateEditForArray(index: number, value: any): JsonEdit<any> {
     let editValue: JsonEdit<any>;
-    if (Array.isArray(value) || typeof value === 'object') {
+    if (Array.isArray(value) || typeof value === "object") {
         editValue = {
-            type: Array.isArray(value) ? 'array' : 'object',
-            action: 'set',
-            values: value,
+            type: Array.isArray(value) ? "array" : "object",
+            action: "set",
+            values: value
         };
     }
     else {
         editValue = value;
     }
     return {
-        type: 'array',
-        action: 'update',
+        type: "array",
+        action: "update",
         index,
-        value,
+        value
     };
 }
 
 export function makeEditForArray<T>(
-    array: jsonToAst.ArrayNode, fillValue: T, index: number, value: T | null,
+    array: jsonToAst.ArrayNode, fillValue: T, index: number, value: T | null
 ): JsonEdit<any> {
     let edit: JsonEdit<T[]>;
     if (value === null) {
         if (index === array.children.length - 1) {
             edit = {
-                type: 'array',
-                action: 'delete',
-                index,
+                type: "array",
+                action: "delete",
+                index
             };
         }
         else {
@@ -105,9 +93,9 @@ export function makeEditForArray<T>(
     }
     else if (index === array.children.length) {
         edit = {
-            type: 'array',
-            action: 'push',
-            values: [value],
+            type: "array",
+            action: "push",
+            values: [ value ]
         };
     }
     else if (index > array.children.length) {
@@ -117,9 +105,9 @@ export function makeEditForArray<T>(
         }
         values[index] = value;
         edit = {
-            type: 'array',
-            action: 'set',
-            values,
+            type: "array",
+            action: "set",
+            values
         };
     }
     else {

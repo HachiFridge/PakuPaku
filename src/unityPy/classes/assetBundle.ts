@@ -1,5 +1,5 @@
-import { NamedObject } from './namedObject';
-import { PPtr } from './pPtr';
+import { NamedObject } from "./namedObject";
+import { PPtr } from "./pPtr";
 
 export interface AssetBundle extends NamedObject {
     // STUB
@@ -8,5 +8,5 @@ export interface AssetBundle extends NamedObject {
 
 export interface AssetInfo {
     // STUB
-    asset: PPtr;
+    asset: PPtr
 }

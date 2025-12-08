@@ -6,21 +6,21 @@ import { whenReady } from '../extensionContext';
 
 function queryCategories() {
     return SQLite.instance.queryMeta(
-        'SELECT DISTINCT SUBSTR(n, 12, 2) FROM a WHERE n LIKE \'story/data/__/____/storytimeline\\__________\' ESCAPE \'\\\'',
+        "SELECT DISTINCT SUBSTR(n, 12, 2) FROM a WHERE n LIKE 'story/data/__/____/storytimeline\\__________' ESCAPE '\\'"
     );
 }
 
 function queryGroups(categoryId: string) {
     return SQLite.instance.queryMeta(
         `SELECT DISTINCT SUBSTR(n, 15, 4)
-        FROM a WHERE n LIKE 'story/data/${categoryId}/____/storytimeline\\__________' ESCAPE '\\'`,
+        FROM a WHERE n LIKE 'story/data/${categoryId}/____/storytimeline\\__________' ESCAPE '\\'`
     );
 }
 
 function queryStories(categoryId: string, groupId: string) {
     return SQLite.instance.queryMeta(
         `SELECT SUBSTR(n, 34, 9)
-        FROM a WHERE n LIKE 'story/data/${categoryId}/${groupId}/storytimeline\\__________' ESCAPE '\\'`,
+        FROM a WHERE n LIKE 'story/data/${categoryId}/${groupId}/storytimeline\\__________' ESCAPE '\\'`
     );
 }
 
@@ -28,25 +28,25 @@ enum TreeLevel {
     None,
     Category,
     Group,
-    Story,
+    Story
 }
 
 const categoryNames: { [key: string]: string } = {
-    '00': '> Short Episodes',
-    '01': '> Tutorials',
-    '02': '> Main Story',
-    '04': '> Umamusume Stories',
-    '08': '> Scenario Intros',
-    '09': '> Story Events',
-    '10': '> Anniv. Stories',
-    '11': '> G1 Outfit Episodes',
-    '12': '> New Year Short Episodes',
-    '13': '> KIRARI MAGIC SHOW',
-    '40': '> Scenario Career Events',
-    '50': '> Umamusume Career Events',
-    '80': '> Support Card Events (R)',
-    '82': '> Support Card Events (SR)',
-    '83': '> Support Card Events (SSR)',
+    "00": "> Short Episodes",
+    "01": "> Tutorials",
+    "02": "> Main Story",
+    "04": "> Umamusume Stories",
+    "08": "> Scenario Intros",
+    "09": "> Story Events",
+    "10": "> Anniv. Stories",
+    "11": "> G1 Outfit Episodes",
+    "12": "> New Year Short Episodes",
+    "13": "> KIRARI MAGIC SHOW",
+    "40": "> Scenario Career Events",
+    "50": "> Umamusume Career Events",
+    "80": "> Support Card Events (R)",
+    "82": "> Support Card Events (SR)",
+    "83": "> Support Card Events (SSR)"
 };
 
 async function getGroupName(categoryId: string, groupId: string): Promise<string | undefined> {
@@ -57,7 +57,7 @@ async function getGroupName(categoryId: string, groupId: string): Promise<string
             return characterNames[+groupId];
         }
         case 40:
-            return (await utils.getTextDataCategory(119))[+groupId]?.replaceAll('\\n', ' ');
+            return (await utils.getTextDataCategory(119))[+groupId]?.replaceAll("\\n", " ");
     }
 }
 
@@ -75,19 +75,19 @@ export default class StoriesTreeDataProvider extends RefreshableTreeDataProvider
     private static _instance?: StoriesTreeDataProvider;
     static get instance(): StoriesTreeDataProvider | undefined { return this._instance; }
 
-    static register(context: vscode.ExtensionContext): vscode.Disposable {
-        const treeDataProvider = new StoriesTreeDataProvider();
+    static register(_context: vscode.ExtensionContext): vscode.Disposable {
+        const treeDataProvider = new StoriesTreeDataProvider;
         StoriesTreeDataProvider._instance = treeDataProvider;
 
         const treeView = vscode.window.createTreeView('stories', {
-            treeDataProvider,
+            treeDataProvider
         });
 
         treeDataProvider.initRefreshWatcher(treeView, async () => {
             const dir = await LocalizedDataManager.instancePromise
-                .then(m => m.getPathUri('assets_dir', undefined, 'story', 'data'));
+                .then(m => m.getPathUri("assets_dir", undefined, "story", "data"));
             if (!dir) { return; }
-            return new vscode.RelativePattern(dir, '**/*.json');
+            return new vscode.RelativePattern(dir, "**/*.json");
         });
 
         return treeView;
@@ -114,12 +114,12 @@ export default class StoriesTreeDataProvider extends RefreshableTreeDataProvider
                     id,
                     tooltip: id,
                     label,
-                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
                 });
             }
         }
         else {
-            const components = element.id!.split('/');
+            const components = element.id!.split("/");
             const level = components.length as TreeLevel;
             const [categoryId, groupId] = components;
 
@@ -137,7 +137,7 @@ export default class StoriesTreeDataProvider extends RefreshableTreeDataProvider
                             id: itemId,
                             tooltip: itemId,
                             label,
-                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
                         });
                     }
                     break;
@@ -153,8 +153,8 @@ export default class StoriesTreeDataProvider extends RefreshableTreeDataProvider
                             label += ` ${name}`;
                         }
 
-                        const dictPath = await ldManager.getPathUri('assets_dir', undefined,
-                            'story', 'data', categoryId, groupId, `storytimeline_${storyId}.json`);
+                        const dictPath = await ldManager.getPathUri("assets_dir", undefined,
+                            "story", "data", categoryId, groupId, `storytimeline_${storyId}.json`);
                         const dictExists = dictPath !== undefined && await utils.uriExists(dictPath);
 
                         items.push({
@@ -162,10 +162,10 @@ export default class StoriesTreeDataProvider extends RefreshableTreeDataProvider
                             tooltip: itemId,
                             label: utils.makeActiveStatusLabel(label, dictExists),
                             command: {
-                                title: 'PakuPaku: Open story editor',
-                                command: 'pakupaku.openStoryEditor',
-                                arguments: ['story', storyId],
-                            },
+                                title: "PakuPaku: Open story editor",
+                                command: "pakupaku.openStoryEditor",
+                                arguments: ["story", storyId]
+                            }
                         });
                     }
                     break;

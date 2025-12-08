@@ -314,10 +314,10 @@
             icon: "clear-all",
             tooltip: "Clear",
             onClick: () => {
-                const selectedMap = $selectedNodes as { [key: string]: number };
-                for (const pathStr in selectedMap) {
+                const selectedNodes = $selectedNodes;
+                for (const pathStr in selectedNodes) {
                     const path = pathStr.split("/");
-                    const contentCount = selectedMap[pathStr];
+                    const contentCount = selectedNodes[pathStr];
                     for (let i = 0; i < contentCount; ++i) {
                         vscode.postMessage({
                             type: "setTextSlotContent",
@@ -352,12 +352,12 @@
     <div class="search-container">
         <div class="search-box-container">
             <InputBox placeholder="Search" bind:value={searchQuery} />
-            <button type="button" class="search-expand-btn" aria-label="Toggle search options" aria-expanded={searchOptionsOpen} aria-controls="search-options" on:click={onSearchOptionsToggle}>
+            <div class="search-expand-btn" on:click={onSearchOptionsToggle}>
                 <div class="codicon codicon-{searchExpandIcon}"></div>
-            </button>
+            </div>
         </div>
         {#if searchOptionsOpen}
-            <div id="search-options" class="search-options">
+            <div class="search-options">
                 <div><input type="checkbox" bind:checked={searchOptions.caseSensitive}>Case sensitive</div>
                 <div><input type="checkbox" bind:checked={searchOptions.regex}>Use regular expression</div>
                 <div><input type="checkbox" bind:checked={searchOptions.searchInContent}>Search in content</div>
@@ -366,13 +366,13 @@
         {/if}
     </div>
     <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-    <div class="tree-view" role="tree" aria-label="Explorer tree" style={searchQuery ? "display: none;" : null} tabindex="0" bind:this={treeView} on:scroll={onScroll} on:mousemove={onMouseMove} on:mouseup={onMouseUp} on:keydown={onKeyDown}>
+    <div class="tree-view" style={searchQuery ? "display: none;" : null} tabindex="0" bind:this={treeView} on:scroll={onScroll} on:mousemove={onMouseMove} on:mouseup={onMouseUp} on:keydown={onKeyDown}>
         {#each nodes as node}
             <TreeNode {node} siblings={nodes} {hideExists} />
         {/each}
     </div>
     {#if searchQuery}
-        <div class="tree-view" role="tree" aria-label="Search results" tabindex="0" on:mousemove={onMouseMove} on:mouseup={onMouseUp}>
+        <div class="tree-view" on:mousemove={onMouseMove} on:mouseup={onMouseUp}>
             {#if searchWorker}
                 <div class="searching-label">Searching...</div>
             {/if}
@@ -420,9 +420,6 @@
         align-items: center;
         color: var(--vscode-icon-foreground);
         margin-left: 2px;
-        background: none;
-        border: none;
-        cursor: pointer;
     }
 
     .search-expand-btn:hover {

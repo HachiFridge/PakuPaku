@@ -1,8 +1,8 @@
-import SQLite from '../sqlite';
-import path from 'path';
-import fs from 'fs/promises';
-import downloader from './downloader';
-import config from '../config';
+import SQLite from "../sqlite";
+import path from "path";
+import fs from "fs/promises";
+import downloader from "./downloader";
+import config from "../config";
 import { loadBundle as loadBundleViaBridge } from '../pythonBridge';
 import { resolve as resolvePath } from 'path';
 import { whenReady } from '../extensionContext';
@@ -10,21 +10,21 @@ import { whenReady } from '../extensionContext';
 async function getAssetHash(name: string) {
     await whenReady;
     const sqlite = SQLite.instance;
-    const query = `SELECT h FROM a WHERE n = '${name.replace('\'', '')}'`;
+    const query = `SELECT h FROM a WHERE n = '${name.replace("'", "")}'`;
     const queryRes = await sqlite.queryMeta(query);
     return queryRes.at(0)?.rows.at(0)?.at(0);
 }
 
 function getAssetPath(hash: string) {
-    const gameDataDir = config().get<string>('gameDataDir');
+    const gameDataDir = config().get<string>("gameDataDir");
     if (!gameDataDir) {
-        throw new Error('Attempted to load an asset file, but the game data directory is not set');
+        throw new Error("Attempted to load an asset file, but the game data directory is not set");
     }
 
-    const assetDir = path.join(gameDataDir, 'dat', hash.slice(0, 2));
+    const assetDir = path.join(gameDataDir, "dat", hash.slice(0, 2));
     return {
         assetDir,
-        assetPath: path.join(assetDir, hash),
+        assetPath: path.join(assetDir, hash)
     };
 }
 
@@ -35,8 +35,8 @@ async function getMetaPlatform(): Promise<string | undefined> {
     return queryRes.at(0)?.rows.at(0)?.at(0)?.slice(2);
 }
 
-const ASSET_BASE_URL_JP = 'https://prd-storage-game-umamusume.akamaized.net/dl/resources/';
-const ASSET_BASE_URL_GL = 'https://assets-umamusume-en.akamaized.net/dl/vertical/resources/';
+const ASSET_BASE_URL_JP = "https://prd-storage-game-umamusume.akamaized.net/dl/resources/";
+const ASSET_BASE_URL_GL = "https://assets-umamusume-en.akamaized.net/dl/vertical/resources/";
 let assetBaseUrl: string | undefined;
 
 async function getAssetBaseUrl(): Promise<string> {
@@ -46,10 +46,9 @@ async function getAssetBaseUrl(): Promise<string> {
 
     await getMetaPlatform();
 
-    if (SQLite.detectedGameVersion === 'GL') {
+    if (SQLite.detectedGameVersion === "GL") {
         assetBaseUrl = ASSET_BASE_URL_GL;
-    }
-    else {
+    } else {
         assetBaseUrl = ASSET_BASE_URL_JP;
     }
 
@@ -67,7 +66,7 @@ async function loadGenericAsset(name: string): Promise<string> {
         return loadGenericAssetByHash(hash);
     }
     else {
-        throw new Error('Failed to resolve generic asset with name: ' + name);
+        throw new Error("Failed to resolve generic asset with name: " + name);
     }
 }
 
@@ -82,11 +81,10 @@ async function ensureAssetDownloaded(hash: string, isGeneric: boolean): Promise<
     try {
         await fs.stat(assetPath);
         return assetPath;
-    }
-    catch {
+    } catch {
     }
 
-    const autoDownloadBundles = config().get<boolean>('autoDownloadBundles');
+    const autoDownloadBundles = config().get<boolean>("autoDownloadBundles");
     if (!autoDownloadBundles) {
         throw new Error(`Asset not found and auto-download is disabled: ${hash}`);
     }
@@ -96,15 +94,14 @@ async function ensureAssetDownloaded(hash: string, isGeneric: boolean): Promise<
 
     if (isGeneric) {
         downloadUrl = await getGenericDownloadUrl(hash);
-        assetType = 'generic asset';
-    }
-    else {
+        assetType = "generic asset";
+    } else {
         const platform = await getMetaPlatform();
         if (!platform) {
-            throw new Error('Could not determine platform from meta DB to download asset bundle.');
+            throw new Error("Could not determine platform from meta DB to download asset bundle.");
         }
         downloadUrl = await getBundleDownloadUrl(platform, hash);
-        assetType = 'asset bundle';
+        assetType = "asset bundle";
     }
 
     await fs.mkdir(assetDir, { recursive: true });
@@ -120,5 +117,5 @@ async function loadGenericAssetByHash(hash: string): Promise<string> {
 export default {
     getAssetHash,
     getAssetPath,
-    ensureAssetDownloaded,
+    ensureAssetDownloaded
 };

@@ -6,7 +6,7 @@
   "repository": {
     "url": "https://github.com/HachiFridge/PakuPaku"
   },
-  "version": "1.0.4",
+  "version": "1.0.5",
   "engines": {
     "vscode": "^1.106.0"
   },
@@ -305,42 +305,36 @@
     "vscode:prepublish": "pnpm run compile",
     "compile": "pnpm run wv:build && node build.mjs",
     "watch": "run-p wv:watch ts:watch",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint:fix": "eslint 'src/**/*.ts' --fix",
-    "typecheck": "tsc -p . --noEmit",
+    "lint": "eslint src --ext ts",
     "package": "vsce package --no-dependencies",
     "wv:build": "cd webviews && pnpm run build",
     "wv:watch": "cd webviews && pnpm run build --watch",
-    "wv:check": "pnpm -C webviews run check",
-    "clean": "node -e \"const fs=require('fs');try{fs.rmSync('out',{recursive:true,force:true})}catch{};try{fs.rmSync('webviews/dist',{recursive:true,force:true})}catch{}\"",
     "ts:watch": "tsc -watch -p ./"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@stylistic/eslint-plugin": "^2.11.0",
     "@types/follow-redirects": "^1.14.4",
     "@types/json-to-ast": "^2.1.4",
     "@types/mocha": "^10.0.6",
-    "@types/node": "^24.10.1",
+    "@types/node": "20.x",
     "@types/tar": "^6.1.13",
-    "@types/vscode": "^1.106.1",
-    "@typescript-eslint/eslint-plugin": "^8.48.1",
-    "@typescript-eslint/parser": "^8.48.1",
+    "@types/vscode": "^1.106.0",
+    "@typescript-eslint/eslint-plugin": "^8.14.0",
+    "@typescript-eslint/parser": "^8.14.0",
     "@vscode/vsce": "^3.7.1",
-    "esbuild": "^0.27.1",
+    "esbuild": "^0.24.0",
     "esbuild-plugin-copy": "^2.1.1",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.0",
     "npm-run-all": "^4.1.5",
-    "typescript": "^5.9.3",
+    "typescript": "^5.9.0",
     "typescript-eslint": "^8.48.1"
   },
   "dependencies": {
     "cricodecs": "^1.0.2",
-    "csv-parse": "^6.1.0",
-    "csv-parser": "^3.2.0",
-    "follow-redirects": "^1.15.11",
+    "csv-parse": "^5.5.5",
+    "csv-parser": "^2.3.5",
+    "follow-redirects": "^1.15.6",
     "json-to-ast": "^2.1.0",
     "pymport": "1.6.0-rc.2",
-    "tar": "^7.5.2"
+    "tar": "^6.2.1"
   }
 }

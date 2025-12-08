@@ -93,7 +93,7 @@
         return true;
     }
 
-    function onClick(e: MouseEvent) {
+    function onClick(e: PointerEvent) {
         if (!nodeOnSelect(!e.ctrlKey)) {
             return;
         }
@@ -116,13 +116,6 @@
     function onMouseMove(e: MouseEvent) {
         if (e.ctrlKey && e.buttons == 1 && !(pathStr in $selectedNodes)) {
             nodeOnSelect(false);
-        }
-    }
-
-    function onKeyDown(e: KeyboardEvent) {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick(e as unknown as PointerEvent);
         }
     }
 
@@ -175,11 +168,7 @@
             class="tree-node" class:focus class:noContent
             class:selected={pathStr in $selectedNodes}
             class:copying={pathStr in $copyingNodes}
-            role="treeitem"
-            aria-selected={pathStr in $selectedNodes}
-            aria-expanded={node.type === 'category' ? open : undefined}
-            tabindex="0"
-            title={pathStr} on:click={onClick} on:keydown={onKeyDown}
+            title={pathStr} on:click={onClick} on:click
             on:mousemove={onMouseMove}
         >
             {#if selectionIndex !== null}

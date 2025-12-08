@@ -14,7 +14,7 @@
     const _ = { readonly, multiline, link, active, placeholder };
 </script>
 
-<div class="name-outer" role="button" tabindex="0" {title} on:focus on:blur on:keydown on:mousemove on:click>
+<div class="name-outer" {title} on:focus on:blur on:keydown on:mousemove on:click>
     <div class="name">{value ?? ""}</div>
 </div>
 <div class="name-bg"></div>

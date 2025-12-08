@@ -10,11 +10,11 @@ export interface StatementPosition {
 }
 
 export enum StatementType {
-    COMMAND = 'COMMAND',
-    PRAGMA = 'PRAGMA',
-    SELECT = 'SELECT',
-    UPDATE = 'UPDATE',
-    INSERT = 'INSERT',
-    EXPLAIN = 'EXPLAIN',
-    OTHER = 'OTHER',
+    COMMAND = "COMMAND",
+    PRAGMA = "PRAGMA",
+    SELECT = "SELECT",
+    UPDATE = "UPDATE",
+    INSERT = "INSERT",
+    EXPLAIN = "EXPLAIN",
+    OTHER = "OTHER"
 }

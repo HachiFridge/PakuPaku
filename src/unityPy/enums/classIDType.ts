@@ -366,5 +366,5 @@ export enum ClassIDType {
     VisualEffectObject = 2059678085,
     VisualEffect = 2083052967,
     LocalizationAsset = 2083778819,
-    ScriptedImporter = 2089858483,
+    ScriptedImporter = 2089858483
 }

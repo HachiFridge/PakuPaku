@@ -17,10 +17,10 @@ declare namespace pk {
 }
 
 declare namespace pk.mdb {
-    function loadTextData(): Promise<{[key: string]: {[key: string]: string}}>;
-    function loadCharacterSystemText(): Promise<{[key: string]: {[key: string]: string}}>;
-    function loadRaceJikkyoComment(): Promise<{[key: string]: string}>;
-    function loadRaceJikkyoMessage(): Promise<{[key: string]: string}>;
+    function loadTextData(): Promise<{ [key: string]: { [key: string]: string } }>;
+    function loadCharacterSystemText(): Promise<{ [key: string]: { [key: string]: string } }>;
+    function loadRaceJikkyoComment(): Promise<{ [key: string]: string }>;
+    function loadRaceJikkyoMessage(): Promise<{ [key: string]: string }>;
 }
 
 interface JsonValue {

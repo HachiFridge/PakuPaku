@@ -21,36 +21,36 @@ export class LyricsEditorProvider extends EditorBase implements vscode.CustomTex
 
     resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken) {
         // Json document setup
-        const json = new JsonDocument<{ [key: string]: string } | null>(document.uri, null, () => {
+        const json = new JsonDocument<{[key: string]: string} | null>(document.uri, null, () => {
             const subscribedKey = this.subscribedPath[0];
             const content = getDictValue(subscribedKey);
             postMessage({
-                type: 'setTextSlotContent',
+                type: "setTextSlotContent",
                 entryPath: this.subscribedPath,
                 index: 0,
-                content,
+                content
             });
             postMessage({
-                type: 'setExists',
+                type: "setExists",
                 path: this.subscribedPath,
-                exists: content !== null,
+                exists: content !== null
             });
         });
         this.disposables.push(json);
 
-        const initReadPromise = json.readTextDocument().catch((_) => { });
+        const initReadPromise = json.readTextDocument().catch(_ => {});
         json.watchTextDocument(document);
         function getDictProperty(id: TreeNodeId): jsonToAst.PropertyNode | undefined {
-            if (json.ast.type !== 'Object' || typeof id !== 'string') { return; }
+            if (json.ast.type !== "Object" || typeof id !== "string") { return; }
             return json.astObjectsProps.get(json.ast)?.[id];
         }
         function getDictValue(id: TreeNodeId): string | null {
             const valueNode = getDictProperty(id)?.value;
-            return (!valueNode || valueNode.type !== 'Literal' || typeof valueNode.value !== 'string')
-                ? null
-                : valueNode.value;
+            return (!valueNode || valueNode.type !== "Literal" || typeof valueNode.value !== "string") ?
+                null :
+                valueNode.value;
         }
-
+        
         // Init webview
         this.setupWebview(webviewPanel);
 
@@ -63,71 +63,55 @@ export class LyricsEditorProvider extends EditorBase implements vscode.CustomTex
         const nodesPromise = LyricsEditorProvider.generateNodes(document.uri);
         webviewPanel.webview.onDidReceiveMessage((message: EditorMessage) => {
             switch (message.type) {
-                case 'init':
-                    postMessage({ type: 'setExplorerTitle', title: 'Lyrics' });
+                case "init":
+                    postMessage({ type: "setExplorerTitle", title: "Lyrics" });
                     // Just making sure to prevent data races
                     initReadPromise.finally(() => {
-                        nodesPromise.then((nodes) => {
-                            postMessage({ type: 'setNodes', nodes });
+                        nodesPromise.then(nodes => {
+                            postMessage({ type: "setNodes", nodes });
                         })
-                            .catch(e => vscode.window.showErrorMessage('' + e));
+                        .catch(e => vscode.window.showErrorMessage("" + e));
                     });
                     fontHelper.onInit(webviewPanel.webview);
                     break;
-
-                case 'getTextSlotContent': {
+                
+                case "getTextSlotContent": {
                     const key = message.entryPath[0];
                     postMessage({
-                        type: 'setTextSlotContent',
+                        type: "setTextSlotContent",
                         entryPath: message.entryPath,
                         index: message.index,
-                        content: getDictValue(key),
+                        content: getDictValue(key)
                     });
                     break;
                 }
-
-                case 'getExists': {
+                
+                case "getExists": {
                     const key = message.path[0];
                     postMessage({
-                        type: 'setExists',
+                        type: "setExists",
                         path: message.path,
-                        exists: getDictValue(key) !== null,
+                        exists: getDictValue(key) !== null
                     });
                     break;
                 }
 
-                case 'setTextSlotContent': {
+                case "setTextSlotContent": {
                     const key = message.entryPath[0];
-                    if (typeof key !== 'string') { break; }
+                    if (typeof key !== "string") { break; }
 
                     // Wait for previous edit to finish before applying another
                     prevEditPromise = prevEditPromise.then(async () => {
                         try {
-                            if (json.ast.type !== 'Object') { return; }
-                            const props = json.astObjectsProps.get(json.ast)!;
-                            const map: Record<string, any> = {};
-                            for (const k of Object.keys(props)) {
-                                const v = props[k]?.value;
-                                if (v) { map[k] = JsonDocument.getValue(v as any); }
-                            }
-                            if (message.content === null) { delete map[key]; }
-                            else { map[key] = message.content; }
-                            const sorted = Object.keys(map)
-                                .sort((a, b) => {
-                                    const na = +a; const nb = +b;
-                                    const an = !isNaN(na); const bn = !isNaN(nb);
-                                    if (an && bn) { return na - nb; }
-                                    if (an) { return -1; } if (bn) { return 1; }
-                                    return a.localeCompare(b);
-                                })
-                                .reduce((o, k) => (o[k] = map[k], o), {} as Record<string, any>);
-                            const applied = await json.applyEdit({ type: 'object', action: 'set', values: sorted });
+                            const applied = await json.applyEdit(
+                                makeEditForStringProperty(key, message.content)
+                            );
                             if (!applied) {
-                                vscode.window.showErrorMessage('Failed to apply edit');
+                                vscode.window.showErrorMessage("Failed to apply edit");
                             }
                         }
                         catch (e) {
-                            vscode.window.showErrorMessage('' + e);
+                            vscode.window.showErrorMessage("" + e);
                         }
                     });
                     break;
@@ -137,15 +121,15 @@ export class LyricsEditorProvider extends EditorBase implements vscode.CustomTex
     }
 
     static async generateNodes(uri: vscode.Uri): Promise<ITreeNode[]> {
-        const pathSplit = uri.path.split('/');
+        const pathSplit = uri.path.split("/");
         const filename = pathSplit.at(-1);
         const matches = filename?.match(/^(m\d{4})(_lyrics\.json)$/);
         const musicId = matches?.[1];
         if (!musicId) {
-            throw new Error('Failed to parse song index from filename');
+            throw new Error("Failed to parse song index from filename");
         }
 
-        const lyricsAssetName = musicId + '_lyrics';
+        const lyricsAssetName = musicId + "_lyrics";
         const assetBundleName = `live/musicscores/${musicId}/${lyricsAssetName}`;
 
         const hash = await assetHelper.getAssetHash(assetBundleName);
@@ -154,12 +138,12 @@ export class LyricsEditorProvider extends EditorBase implements vscode.CustomTex
         }
         const assetPath = await assetHelper.ensureAssetDownloaded(hash, false);
 
-        const useDecryption = config().get<boolean>('decryption.enabled');
+        const useDecryption = config().get<boolean>("decryption.enabled");
         const metaPath = SQLite.instance.getMetaPath();
-        const metaKey = config().get<string>('decryption.metaKey');
+        const metaKey = config().get<string>("decryption.metaKey");
 
         if (useDecryption && !metaPath) {
-            throw new Error('Decryption is enabled, but the meta path is not set.');
+            throw new Error("Decryption is enabled, but the meta path is not set.");
         }
 
         const absoluteAssetPath = resolvePath(assetPath);
@@ -168,27 +152,27 @@ export class LyricsEditorProvider extends EditorBase implements vscode.CustomTex
         const lyricsData = await extractLyricsData({
             assetPath: absoluteAssetPath,
             assetName: lyricsAssetName,
-            useDecryption: useDecryption ?? true,
+            useDecryption: useDecryption,
             metaPath: absoluteMetaPath,
             bundleHash: hash,
-            metaKey: metaKey,
+            metaKey: metaKey
         });
 
         const data: [string, string][] = parseCsv(lyricsData.csv_data, {
-            encoding: 'utf8', from: 2, relax_column_count_more: true,
-            skip_empty_lines: true,
-        }) as unknown as [string, string][];
+            encoding: "utf8", from: 2, relax_column_count_more: true,
+            skip_empty_lines: true
+        });
 
         const nodes: IEntryTreeNode[] = [];
         for (const row of data) {
-            const [time, lyrics] = row;
+            const [ time, lyrics ] = row;
             if (!lyrics) { continue; }
             const prevNode = nodes[nodes.length - 1];
             if (prevNode) { prevNode.next = time; }
             nodes.push({
-                type: 'entry', id: time, name: lyrics,
+                type: "entry", id: time, name: lyrics,
                 content: [{ content: lyrics, multiline: true }],
-                prev: prevNode?.id,
+                prev: prevNode?.id
             });
         }
 
@@ -196,6 +180,6 @@ export class LyricsEditorProvider extends EditorBase implements vscode.CustomTex
     }
 
     protected override getHtmlForWebview(webview: vscode.Webview): string {
-        return getEditorHtml(this.context.extensionUri, webview, 'commonEditor', 'Lyrics Editor');
+        return getEditorHtml(this.context.extensionUri, webview, "commonEditor", "Lyrics Editor");
     }
 }

@@ -24,7 +24,7 @@
 </script>
 
 <div class="content-outer">
-    <div class="content" role="button" tabindex="0" {title} on:focus on:blur on:keydown on:mousemove on:click
+    <div class="content" {title} on:focus on:blur on:keydown on:mousemove on:click
         style="font-size: {fontSize}cqh; line-height: {lineHeight};">
         <ColorText content={displayValue} translated={!readonly} />
     </div>

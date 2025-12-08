@@ -39,22 +39,10 @@
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
     }
-    function onKeyDown(e: KeyboardEvent) {
-        if (horizontal) {
-            if (e.key === 'ArrowUp') { size = Math.max(minSize, size - 10); }
-            if (e.key === 'ArrowDown') { size = Math.min(maxSize, size + 10); }
-        } else {
-            if (e.key === 'ArrowLeft') { size = Math.max(minSize, size - 10); }
-            if (e.key === 'ArrowRight') { size = Math.min(maxSize, size + 10); }
-        }
-    }
 </script>
 
-<div class="sash" 
-    class:horizontal class:left class:top role="slider" 
-    aria-label="Resize panel" aria-orientation={horizontal ? 'horizontal' : 'vertical'}
-    aria-valuemin={minSize} aria-valuemax={maxSize} aria-valuenow={size} tabindex="0" 
-    on:mousedown={onMouseDown} on:mouseup={onMouseUp} on:keydown={onKeyDown}>
+<div class="sash" class:horizontal class:left class:top on:mousedown={onMouseDown} on:mouseup={onMouseUp}>
+    
 </div>
 
 <style>

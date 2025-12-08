@@ -1,4 +1,4 @@
-import { EditorExtension } from './editorExtension';
+import { EditorExtension } from "./editorExtension";
 
 export interface NamedObject extends EditorExtension {
     name: string;

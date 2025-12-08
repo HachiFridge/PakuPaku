@@ -18,7 +18,7 @@
     $: gender = info.type == StoryTextSlotType.Choice ? info.gender : null;
 </script>
 
-<div class="choice-outer" role="button" tabindex="0" {title} class:link class:active on:focus on:blur on:keydown on:mousemove on:click>
+<div class="choice-outer" {title} class:link class:active on:focus on:blur on:keydown on:mousemove on:click>
     <div class="choice" class:blue={gender == "male"} class:pink={gender == "female"}>
         <TMPText content={value ?? ""} sizeMultiplier={38.2608/44} />
     </div>

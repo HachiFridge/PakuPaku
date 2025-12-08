@@ -8,27 +8,27 @@ import fontHelper from './fontHelper';
 import { EditorBase } from './editorBase';
 import { whenReady } from '../extensionContext';
 
-const TABLE_CATEGORIZERS: { [K in MdbTableName]?: (column: string) => Promise<string> | string } = {
-    text_data: category => `${category} ${textDataCategories[category] ?? ''}`,
-    character_system_text: async (characterId) => {
+const TABLE_CATEGORIZERS: {[K in MdbTableName]?: (column: string) => Promise<string> | string} = {
+    "text_data": category => `${category} ${textDataCategories[category] ?? ""}`,
+    "character_system_text": async characterId => {
         const characterNames = await utils.getTextDataCategoryCached(6);
         return characterNames[+characterId] ?? characterId;
-    },
+    }
 };
 
-const TEXT_DATA_CHARACTER_CATEGORIES = new Set([7, 8, 9, 144, 157, 158, 162, 163, 164, 165, 166, 167, 168, 169]);
+const TEXT_DATA_CHARACTER_CATEGORIES = new Set([ 7, 8, 9, 144, 157, 158, 162, 163, 164, 165, 166, 167, 168, 169 ]);
 const TABLE_ENTRY_NAME_GETTERS: {
     [K in MdbTableName]?: (categoryColumn: string | null, idColumn: string) => Promise<string | void> | string | void
 } = {
-    text_data: async (category, index) => {
+    "text_data": async (category, index) => {
         // ???
         if (!category) { return; }
 
         if (TEXT_DATA_CHARACTER_CATEGORIES.has(+category)) {
             const characterNames = await utils.getTextDataCategoryCached(6);
-            return `${index} ${characterNames[+index] ?? ''}`;
+            return `${index} ${characterNames[+index] ?? ""}`;
         }
-    },
+    }
 };
 
 export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEditorProvider {
@@ -41,33 +41,33 @@ export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEd
 
     resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken) {
         const tableName = this.getTableName(document.uri);
-
+        
         // Json document setup
-        const json = new JsonDocument<{ [key: string]: string | { [key: string]: string } } | null>(document.uri, null, () => {
+        const json = new JsonDocument<{[key: string]: string | {[key: string]: string}} | null>(document.uri, null, () => {
             const content = getDictValue(this.subscribedPath);
             postMessage({
-                type: 'setTextSlotContent',
+                type: "setTextSlotContent",
                 entryPath: this.subscribedPath,
                 index: 0,
-                content,
+                content
             });
             postMessage({
-                type: 'setExists',
+                type: "setExists",
                 path: this.subscribedPath,
-                exists: content !== null,
+                exists: content !== null
             });
         });
         this.disposables.push(json);
 
-        const initReadPromise = json.readTextDocument().catch((_) => {});
+        const initReadPromise = json.readTextDocument().catch(_ => {});
         json.watchTextDocument(document);
         function getDictProperty(path: TreeNodeId[]): jsonToAst.PropertyNode | undefined {
-            if (json.ast.type !== 'Object' || !path.length) { return; }
+            if (json.ast.type !== "Object" || !path.length) { return; }
             let currentObject = json.ast;
             for (let i = 0; i < path.length - 1; ++i) {
                 const id = path[i];
                 const valueNode = json.astObjectsProps.get(currentObject)?.[id]?.value;
-                if (valueNode?.type !== 'Object') { return; }
+                if (valueNode?.type !== "Object") { return; }
                 currentObject = valueNode;
             }
 
@@ -75,11 +75,11 @@ export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEd
         }
         function getDictValue(path: TreeNodeId[]): string | null {
             const valueNode = getDictProperty(path)?.value;
-            return (!valueNode || valueNode.type !== 'Literal' || typeof valueNode.value !== 'string')
-                ? null
-                : valueNode.value;
+            return (!valueNode || valueNode.type !== "Literal" || typeof valueNode.value !== "string") ?
+                null :
+                valueNode.value;
         }
-
+        
         // Init webview
         this.setupWebview(webviewPanel);
 
@@ -96,104 +96,115 @@ export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEd
                 data = await dataPromise;
             }
             catch (e) {
-                return vscode.window.showErrorMessage('' + e);
+                return vscode.window.showErrorMessage("" + e);
             }
             switch (message.type) {
-                case 'init':
-                    postMessage({ type: 'setExplorerTitle', title: tableName });
+                case "init":
+                    postMessage({ type: "setExplorerTitle", title: tableName });
                     // Just making sure to prevent data races
                     initReadPromise.finally(() => {
-                        postMessage({ type: 'setNodes', nodes: data.nodes });
+                        postMessage({ type: "setNodes", nodes: data.nodes });
                     });
                     fontHelper.onInit(webviewPanel.webview);
                     break;
-
-                case 'getTextSlotContent':
+                
+                case "getTextSlotContent":
                     postMessage({
-                        type: 'setTextSlotContent',
+                        type: "setTextSlotContent",
                         entryPath: message.entryPath,
                         index: message.index,
-                        content: getDictValue(message.entryPath),
+                        content: getDictValue(message.entryPath)
                     });
                     break;
-
-                case 'getExists':
+                
+                case "getExists": 
                     postMessage({
-                        type: 'setExists',
+                        type: "setExists",
                         path: message.path,
-                        exists: getDictValue(message.path) !== null,
+                        exists: getDictValue(message.path) !== null
                     });
                     break;
-
-                case 'setTextSlotContent':
+                
+                case "setTextSlotContent":
                     // Wait for previous edit to finish before applying another
                     prevEditPromise = prevEditPromise.then(async () => {
                         const path = message.entryPath as string[];
                         const content = message.content;
-
-                        if (json.ast.type !== 'Object') { return; }
-                        const rootProps = json.astObjectsProps.get(json.ast)!;
-                        // Read current root object into JS
-                        const rootMap: Record<string, any> = {};
-                        for (const k of Object.keys(rootProps)) {
-                            const v = rootProps[k]?.value;
-                            if (v) { rootMap[k] = JsonDocument.getValue(v as any); }
-                        }
-
+                        let editPromise: Promise<boolean>;
                         if (path.length === 1) {
-                            if (content === null) { delete rootMap[path[0]]; }
-                            else { rootMap[path[0]] = content; }
+                            editPromise = json.applyEdit(
+                                makeEditForStringProperty(path[0], message.content)
+                            );
                         }
                         else if (path.length === 2) {
-                            const cat = (rootMap[path[0]] && typeof rootMap[path[0]] === 'object') ? { ...(rootMap[path[0]] as Record<string, string>) } : {};
-                            if (content === null) {
-                                delete cat[path[1]];
-                                if (Object.keys(cat).length === 0) { delete rootMap[path[0]]; }
-                                else { rootMap[path[0]] = cat; }
+                            if (json.ast.type !== "Object") { return; }
+                            const categoryProp = json.astObjectsProps.get(json.ast)![path[0]];
+                            if (!categoryProp) {
+                                if (content === null) { return; }
+                                editPromise = json.applyEdit({
+                                    type: "object",
+                                    action: "update",
+                                    property: {
+                                        key: path[0],
+                                        value: {
+                                            type: "object",
+                                            action: "set",
+                                            values: {
+                                                [path[1]]: content
+                                            }
+                                        }
+                                    }
+                                });
                             }
                             else {
-                                cat[path[1]] = content;
-                                rootMap[path[0]] = cat;
-                            }
-                            // sort nested category keys
-                            if (rootMap[path[0]]) {
-                                const sortedCat = Object.keys(rootMap[path[0]])
-                                    .sort((a, b) => { const na = +a, nb = +b; const an = !isNaN(na), bn = !isNaN(nb); if (an && bn) { return na - nb; } if (an) { return -1; } if (bn) { return 1; } return a.localeCompare(b); })
-                                    .reduce((o, k) => (o[k] = rootMap[path[0]][k], o), {} as Record<string, any>);
-                                rootMap[path[0]] = sortedCat;
+                                const categoryObject = categoryProp.value;
+                                if (categoryObject.type !== "Object") { return; }
+                                // last node about to be deleted -> delete the parent category
+                                if (content === null && categoryObject.children.length === 1) {
+                                    editPromise = json.applyEdit({
+                                        type: "object",
+                                        action: "delete",
+                                        key: path[0]
+                                    });
+                                }
+                                else {
+                                    editPromise = json.applyEdit({
+                                        type: "object",
+                                        action: "update",
+                                        property: {
+                                            key: path[0],
+                                            value: makeEditForStringProperty(path[1], content)
+                                        }
+                                    });
+                                }
                             }
                         }
                         else {
                             return;
                         }
 
-                        // sort root keys
-                        const sortedRoot = Object.keys(rootMap)
-                            .sort((a, b) => { const na = +a, nb = +b; const an = !isNaN(na), bn = !isNaN(nb); if (an && bn) { return na - nb; } if (an) { return -1; } if (bn) { return 1; } return a.localeCompare(b); })
-                            .reduce((o, k) => (o[k] = rootMap[k], o), {} as Record<string, any>);
-
                         try {
-                            const applied = await json.applyEdit({ type: 'object', action: 'set', values: sortedRoot });
+                            const applied = await editPromise;
                             if (!applied) {
-                                vscode.window.showErrorMessage('Failed to apply edit');
+                                vscode.window.showErrorMessage("Failed to apply edit");
                             }
                         }
                         catch (e) {
-                            vscode.window.showErrorMessage('' + e);
+                            vscode.window.showErrorMessage("" + e);
                         }
                     });
                     break;
 
-                case 'getCategoryFull':
+                case "getCategoryFull":
                     if (data.categoryMap) {
-                        if (json.ast.type !== 'Object') { break; }
+                        if (json.ast.type != "Object") { break; }
 
                         const categoryId = message.path[0];
                         const category = data.categoryMap[categoryId];
                         if (!category) { break; }
 
                         const categoryProp = json.astObjectsProps.get(json.ast)?.[categoryId];
-                        if (categoryProp?.value.type !== 'Object') { break; }
+                        if (categoryProp?.value.type !== "Object") { break; }
 
                         const tlCategory = categoryProp.value;
                         const tlIdSet = new Set(tlCategory.children.map(c => c.key.value));
@@ -207,9 +218,9 @@ export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEd
                         }
 
                         postMessage({
-                            type: 'setCategoryFull',
+                            type: "setCategoryFull",
                             path: message.path,
-                            full,
+                            full
                         });
                     }
                     break;
@@ -227,7 +238,7 @@ export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEd
         }
         else {
             // dumb table name inference
-            const pathSplit = uri.path.split('/');
+            const pathSplit = uri.path.split("/");
             const filename = pathSplit.at(pathSplit.length - 1);
             if (!filename) {
                 tableName = undefined;
@@ -251,7 +262,7 @@ export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEd
             return tableName;
         }
         else {
-            throw new Error('MDB Editor was launched externally, failed to infer table name from filename');
+            throw new Error("MDB Editor was launched externally, failed to infer table name from filename");
         }
     }
 
@@ -262,22 +273,22 @@ export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEd
         const rows = await SQLite.instance.loadMdbTable(tableName);
 
         const nodes: ITreeNode[] = [];
-        let categoryMap: { [key: string]: IEntryTreeNode[] } | undefined;
+        let categoryMap: {[key: string]: IEntryTreeNode[]} | undefined;
         const nameGetter = TABLE_ENTRY_NAME_GETTERS[tableName];
         if (columns.length === 3) {
             const categorizer = TABLE_CATEGORIZERS[tableName];
             categoryMap = {};
-            for (const [categoryId, id, text] of rows) {
+            for (const [ categoryId, id, text ] of rows) {
                 let categoryChildren = categoryMap[categoryId];
 
                 let prev: TreeNodeId | undefined;
                 if (!categoryChildren) {
                     categoryChildren = [];
                     nodes.push({
-                        type: 'category',
+                        type: "category",
                         id: categoryId,
                         name: await categorizer?.(categoryId) ?? categoryId,
-                        children: categoryChildren,
+                        children: categoryChildren
                     });
                     categoryMap[categoryId] = categoryChildren;
                 }
@@ -288,33 +299,33 @@ export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEd
                 }
 
                 categoryChildren.push({
-                    type: 'entry',
+                    type: "entry",
                     id,
                     name: await nameGetter?.(categoryId, id) ?? text,
                     content: [{
                         content: text,
-                        multiline: true,
+                        multiline: true
                     }],
-                    prev,
+                    prev
                 });
             }
         }
         else {
-            for (const [id, text] of rows) {
+            for (const [ id, text ] of rows) {
                 const prevNode = nodes[nodes.length - 1] as IEntryTreeNode;
                 if (prevNode) {
                     prevNode.next = id;
                 }
 
                 nodes.push({
-                    type: 'entry',
+                    type: "entry",
                     id,
                     name: await nameGetter?.(null, id) ?? text,
                     content: [{
                         content: text,
-                        multiline: true,
+                        multiline: true
                     }],
-                    prev: prevNode?.id,
+                    prev: prevNode?.id
                 });
             }
         }
@@ -323,11 +334,11 @@ export class MdbEditorProvider extends EditorBase implements vscode.CustomTextEd
     }
 
     protected override getHtmlForWebview(webview: vscode.Webview): string {
-        return getEditorHtml(this.context.extensionUri, webview, 'commonEditor', 'Lyrics Editor');
+        return getEditorHtml(this.context.extensionUri, webview, "commonEditor", "Lyrics Editor");
     }
 }
 
 interface InitData {
     nodes: ITreeNode[];
-    categoryMap?: { [key: string]: IEntryTreeNode[] };
+    categoryMap?: {[key: string]: IEntryTreeNode[]};
 }

@@ -2,42 +2,42 @@ import * as vscode from 'vscode';
 import { JsonDocument, JsonEdit } from './jsonDocument';
 
 export interface LocalizedDataConfig {
-    localize_dict?: string;
-    hashed_dict?: string;
-    text_data_dict?: string;
-    character_system_text_dict?: string;
-    race_jikkyo_comment_dict?: string;
-    race_jikkyo_message_dict?: string;
-    assets_dir?: string;
+    localize_dict?: string,
+    hashed_dict?: string,
+    text_data_dict?: string,
+    character_system_text_dict?: string,
+    race_jikkyo_comment_dict?: string,
+    race_jikkyo_message_dict?: string,
+    assets_dir?: string,
 
-    plural_form?: string;
-    ordinal_form?: string;
-    ordinal_types: string[];
-    months: string[];
-    month_text_format?: string;
+    plural_form?: string,
+    ordinal_form?: string,
+    ordinal_types: string[],
+    months: string[],
+    month_text_format?: string,
 
-    use_text_wrapper: boolean;
-    line_width_multiplier?: number;
+    use_text_wrapper: boolean,
+    line_width_multiplier?: number,
 
-    auto_adjust_story_clip_length: boolean;
-    story_line_count_offset?: number;
-    text_frame_line_spacing_multiplier?: number;
-    text_frame_font_size_multiplier?: number;
-    skill_list_item_desc_font_size_multiplier?: number;
-    text_common_allow_overflow: boolean;
-    now_loading_comic_title_ellipsis: boolean;
+    auto_adjust_story_clip_length: boolean,
+    story_line_count_offset?: number,
+    text_frame_line_spacing_multiplier?: number,
+    text_frame_font_size_multiplier?: number,
+    skill_list_item_desc_font_size_multiplier?: number,
+    text_common_allow_overflow: boolean,
+    now_loading_comic_title_ellipsis: boolean,
 
-    remove_ruby: boolean;
-    character_note_top_gallery_button?: UITextConfig;
-    character_note_top_talk_gallery_button?: UITextConfig;
+    remove_ruby: boolean,
+    character_note_top_gallery_button?: UITextConfig,
+    character_note_top_talk_gallery_button?: UITextConfig,
 
-    news_url?: string;
+    news_url?: string,
 }
 
 export interface UITextConfig {
-    text?: string;
-    font_size?: number;
-    line_spacing?: number;
+    text?: string,
+    font_size?: number,
+    line_spacing?: number
 }
 
 const DEFAULT_CONFIG: LocalizedDataConfig = {
@@ -47,7 +47,7 @@ const DEFAULT_CONFIG: LocalizedDataConfig = {
     auto_adjust_story_clip_length: false,
     text_common_allow_overflow: false,
     now_loading_comic_title_ellipsis: false,
-    remove_ruby: false,
+    remove_ruby: false
 };
 
 export class LocalizedDataManager {
@@ -58,12 +58,12 @@ export class LocalizedDataManager {
     private constructor() {
         const folderUri = vscode.workspace.workspaceFolders?.[0]?.uri;
         if (!folderUri) {
-            throw new Error('No workspace folder.');
+            throw new Error("No workspace folder.");
         }
-        this.dirUri = vscode.Uri.joinPath(folderUri, 'localized_data');
-        const configUri = vscode.Uri.joinPath(this.dirUri, 'config.json');
+        this.dirUri = vscode.Uri.joinPath(folderUri, "localized_data");
+        const configUri = vscode.Uri.joinPath(this.dirUri, "config.json");
         this.configJson = new JsonDocument(
-            configUri, DEFAULT_CONFIG, () => this.config = this.configJson.getValue(),
+            configUri, DEFAULT_CONFIG, () => this.config = this.configJson.getValue()
         );
         this.configJson.watchFileSystem();
     }
@@ -73,9 +73,8 @@ export class LocalizedDataManager {
 
     private static _instancePromiseResolve: ((i: LocalizedDataManager) => void) | null = null;
     private static _instancePromise: Promise<LocalizedDataManager> = new Promise(resolve =>
-        this._instancePromiseResolve = resolve,
+        this._instancePromiseResolve = resolve
     );
-
     static get instancePromise(): Promise<LocalizedDataManager> { return this._instancePromise; }
 
     static init() {
@@ -86,15 +85,15 @@ export class LocalizedDataManager {
             instance = new LocalizedDataManager();
         }
         catch (e) {
-            vscode.window.showErrorMessage('' + e);
+            vscode.window.showErrorMessage("" + e);
             return;
         }
 
         instance.configJson.readFile()
-            .catch((reason) => {
+            .catch(reason => {
                 console.error(reason);
                 vscode.window.showWarningMessage(
-                    'Failed to load config.json. It will be created or overwritten automatically when it\'s used.',
+                    "Failed to load config.json. It will be created or overwritten automatically when it's used."
                 );
             })
             .finally(() => {
@@ -110,7 +109,7 @@ export class LocalizedDataManager {
     static async with(callback: (ldManager: LocalizedDataManager) => any) {
         const ldManager = LocalizedDataManager.instance;
         if (!ldManager) {
-            vscode.window.showErrorMessage('PakuPaku is inactive.');
+            vscode.window.showErrorMessage("PakuPaku is inactive.");
             return;
         }
 
@@ -118,7 +117,7 @@ export class LocalizedDataManager {
             await callback(ldManager);
         }
         catch (e) {
-            vscode.window.showErrorMessage('' + e);
+            vscode.window.showErrorMessage("" + e);
         }
     }
 
@@ -143,13 +142,13 @@ export class LocalizedDataManager {
                 return;
             }
             await this.updateConfig({
-                type: 'object',
-                action: 'update',
+                type: "object",
+                action: "update",
                 property: {
                     // @ts-ignore
                     key,
-                    value: defaultValue,
-                },
+                    value: defaultValue
+                }
             });
             value = defaultValue;
         }
@@ -175,7 +174,7 @@ export class LocalizedDataManager {
             document = await vscode.workspace.openTextDocument(uri);
         }
         catch {
-            const untitledUri = uri.with({ scheme: 'untitled' });
+            const untitledUri = uri.with({ scheme: "untitled" });
             document = await vscode.workspace.openTextDocument(untitledUri);
             const edit = new vscode.WorkspaceEdit();
             edit.insert(untitledUri, new vscode.Position(0, 0), defaultFileContent);

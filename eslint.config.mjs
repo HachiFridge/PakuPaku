@@ -1,54 +1,45 @@
-// Flat ESLint config for TypeScript sources in src/
-import js from '@eslint/js';
+// @ts-check
+
+import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import stylistic from '@stylistic/eslint-plugin';
 
 export default tseslint.config(
   {
     ignores: [
-      'out/**',
-      'dist/**',
+      'out/',
+      'dist/',
       '**/*.d.ts',
-      'webviews/**',
-      'node_modules/**'
-    ],
+      'webviews/', // Webviews specific linting can be added later or separate
+      'node_modules/'
+    ]
   },
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
-  stylistic.configs.customize({
-    indent: 4,
-    quotes: 'single',
-    semi: true,
-  }),
   {
-    files: ['src/**/*.ts'],
     languageOptions: {
-      ecmaVersion: 2024,
-      sourceType: 'module'
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
+  },
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
     rules: {
       '@typescript-eslint/naming-convention': [
         'warn',
         {
           selector: 'import',
-          format: ['camelCase', 'PascalCase'],
-        },
+          format: ['camelCase', 'PascalCase']
+        }
       ],
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
-      'no-useless-escape': 'off',
-      'no-empty': 'off',
-      '@typescript-eslint/ban-ts-comment': 'off',
-      'no-async-promise-executor': 'off',
-      'no-case-declarations': 'off',
-      '@stylistic/max-statements-per-line': 'off',
-      'prefer-const': 'warn',
-      curly: 'warn',
-      eqeqeq: 'warn',
-      'no-throw-literal': 'warn',
-      semi: 'warn',
-    },
-  },
+      // Formatter rules should be handled by Prettier or @stylistic
+      // '@typescript-eslint/semi': 'warn',
+      'curly': 'warn',
+      'eqeqeq': 'warn',
+      '@typescript-eslint/only-throw-error': 'warn',
+      'semi': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn'
+    }
+  }
 );

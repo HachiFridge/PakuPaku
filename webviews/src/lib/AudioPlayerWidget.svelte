@@ -10,10 +10,21 @@
 </script>
 
 <div class="audio-player" class:hidden>
-    <audio controls controlsList="noplaybackrate nodownload" {src} bind:this={audioElement}>
+    <audio
+        controls
+        controlsList="noplaybackrate nodownload"
+        {src}
+        bind:this={audioElement}
+    >
         <slot />
     </audio>
-    <button type="button" aria-label="Close" title="Close" class="codicon codicon-chrome-close close-btn" on:click={onClose}></button>
+    <a
+        role="button"
+        tabindex="0"
+        title="Close"
+        class="codicon codicon-chrome-close close-btn"
+        on:click={onClose}
+    ></a>
 </div>
 
 <style>
@@ -21,7 +32,7 @@
         position: absolute;
         top: 35px;
         right: 8px;
-        z-index: 99;
+        z-index: 10;
         background-color: var(--vscode-editorWidget-background);
         box-shadow: 0 0 8px 2px var(--vscode-widget-shadow);
         border-bottom-left-radius: 4px;

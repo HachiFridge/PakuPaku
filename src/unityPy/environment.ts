@@ -1,8 +1,8 @@
-import { Proxify } from '../pythonInterop';
-import { ObjectReader } from './files';
+import { Proxify } from "../pythonInterop";
+import { ObjectReader } from "./files";
 
-export interface Environment {
-    objects: ObjectReader[];
+export default interface Environment {
+    objects: ObjectReader[]
 }
 
 // type alias for proxy

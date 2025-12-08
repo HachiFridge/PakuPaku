@@ -57,9 +57,9 @@ async function execute<T>(command: string, params: object): Promise<T> {
             '-u',
             bridgeScriptPath,
             command,
-            paramsJson,
+            paramsJson
         ], {
-            env: { ...process.env, PYTHONHOME: PYMPORT_DIR },
+            env: { ...process.env, PYTHONHOME: PYMPORT_DIR }
         });
 
         let stdoutData = '';
@@ -88,12 +88,10 @@ async function execute<T>(command: string, params: object): Promise<T> {
 
                 if (response.status === 'success') {
                     resolve(response.data!);
-                }
-                else {
+                } else {
                     reject(new Error(`Python script error: ${response.message}`));
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 reject(new Error(`Failed to parse Python script output. Stdout: ${stdoutData}. Error: ${e}`));
             }
         });
@@ -113,11 +111,11 @@ export async function checkApsw(): Promise<{ apsw_installed: boolean; version?: 
 }
 
 export async function queryEncryptedDb(db_path: string, query: string, key?: string): Promise<ResultSet> {
-    const result = await execute<{ header: string[]; rows: string[][] }>('query_db', { db_path, query, key });
+    const result = await execute<{ header: string[], rows: string[][] }>('query_db', { db_path, query, key });
     return [{
         stmt: query,
         header: result.header,
-        rows: result.rows,
+        rows: result.rows
     }];
 }
 
@@ -135,63 +133,63 @@ async function getMetaKeyIfEnabled(useDecryption: boolean): Promise<string | und
 }
 
 export async function loadBundle(
-    args: ExtractStoryDataParams,
+    args: ExtractStoryDataParams
 ): Promise<{ success: boolean; asset_count: number }> {
     const metaKey = await getMetaKeyIfEnabled(args.useDecryption);
     const params = {
-        asset_path: args.assetPath,
-        use_decryption: args.useDecryption,
-        meta_path: args.metaPath,
-        bundle_hash: args.bundleHash,
-        meta_key: metaKey,
+        "asset_path": args.assetPath,
+        "use_decryption": args.useDecryption,
+        "meta_path": args.metaPath,
+        "bundle_hash": args.bundleHash,
+        "meta_key": metaKey
     };
     return execute<{ success: boolean; asset_count: number }>('load_bundle', params);
 }
 
 export async function extractStoryData(
-    args: ExtractStoryDataParams,
+    args: ExtractStoryDataParams
 ): Promise<ExtractedStoryData> {
     const metaKey = await getMetaKeyIfEnabled(args.useDecryption);
     const params = {
-        asset_path: args.assetPath,
-        asset_name: args.assetName,
-        use_decryption: args.useDecryption,
-        meta_path: args.metaPath,
-        bundle_hash: args.bundleHash,
-        meta_key: metaKey,
+        "asset_path": args.assetPath,
+        "asset_name": args.assetName,
+        "use_decryption": args.useDecryption,
+        "meta_path": args.metaPath,
+        "bundle_hash": args.bundleHash,
+        "meta_key": metaKey
     };
 
-    console.log('[PakuPaku] Sending parameters to Python bridge:', params);
+    console.log("[PakuPaku] Sending parameters to Python bridge:", params);
 
     return execute<ExtractedStoryData>('extract_story_data', params);
 }
 
 export async function extractRaceStoryData(
-    args: ExtractStoryDataParams,
+    args: ExtractStoryDataParams
 ): Promise<{ texts: string[] }> {
     const metaKey = await getMetaKeyIfEnabled(args.useDecryption);
     const params = {
-        asset_path: args.assetPath,
-        asset_name: args.assetName,
-        use_decryption: args.useDecryption,
-        meta_path: args.metaPath,
-        bundle_hash: args.bundleHash,
-        meta_key: metaKey,
+        "asset_path": args.assetPath,
+        "asset_name": args.assetName,
+        "use_decryption": args.useDecryption,
+        "meta_path": args.metaPath,
+        "bundle_hash": args.bundleHash,
+        "meta_key": metaKey
     };
     return execute<{ texts: string[] }>('extract_race_story_data', params);
 }
 
 export async function extractLyricsData(
-    args: ExtractStoryDataParams,
+    args: ExtractStoryDataParams
 ): Promise<{ csv_data: string }> {
     const metaKey = await getMetaKeyIfEnabled(args.useDecryption);
     const params = {
-        asset_path: args.assetPath,
-        asset_name: args.assetName,
-        use_decryption: args.useDecryption,
-        meta_path: args.metaPath,
-        bundle_hash: args.bundleHash,
-        meta_key: metaKey,
+        "asset_path": args.assetPath,
+        "asset_name": args.assetName,
+        "use_decryption": args.useDecryption,
+        "meta_path": args.metaPath,
+        "bundle_hash": args.bundleHash,
+        "meta_key": metaKey
     };
     return execute<{ csv_data: string }>('extract_lyrics_data', params);
 }

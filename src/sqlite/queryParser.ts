@@ -1,9 +1,9 @@
-import { Statement, StatementType } from './interfaces/statement';
+import { Statement, StatementType } from "./interfaces/statement";
 
 export function extractStatements(query: string): Statement[] {
     const statements: Statement[] = [];
 
-    let statement: Statement | undefined;
+    let statement: Statement|undefined;
     let isStmt = false;
     let isInternalBlock = false;
     let isString = false;
@@ -13,13 +13,13 @@ export function extractStatements(query: string): Statement[] {
     let stringChar = '';
 
     const queryLines = query.split(/\r?\n/);
-    for (let lineIndex = 0; lineIndex < queryLines.length; lineIndex++) {
+    for(let lineIndex=0; lineIndex<queryLines.length; lineIndex++) {
         const line = queryLines[lineIndex];
-        for (let charIndex = 0; charIndex < line.length; charIndex++) {
+        for(let charIndex=0; charIndex<line.length; charIndex++) {
             const char = line[charIndex];
-            const prevChar = charIndex > 0 ? line[charIndex - 1] : undefined;
-            const nextChar = charIndex < line.length - 1 ? line[charIndex + 1] : undefined;
-            const lastWord = (n: number) => line.substring(charIndex - n + 1, charIndex + 1);
+            const prevChar = charIndex>0? line[charIndex-1] : undefined;
+            const nextChar = charIndex<line.length-1? line[charIndex+1] : undefined;
+            const lastWord = (n: number) => line.substring(charIndex-n+1, charIndex+1);
 
             if (isStmt) {
                 if (statement) { statement.sql += char; }
@@ -27,81 +27,64 @@ export function extractStatements(query: string): Statement[] {
                 if (!isString && char === '-' && nextChar === '-') {
                     isComment = true;
                     commentChar = '-';
-                }
-                else if (!isString && char === '/' && nextChar === '*') {
+                } else if (!isString && char === '/' && nextChar === '*') {
                     isComment = true;
                     commentChar = '/';
-                }
-                else if (!isString && !isComment && lastWord(5).toLowerCase() === 'begin') {
+                } else if (!isString && !isComment && lastWord(5).toLowerCase() === "begin") {
                     isInternalBlock = true;
-                }
-                else if (!isString && !isComment && lastWord(3).toLowerCase() === 'end') {
+                } else if (!isString && !isComment && lastWord(3).toLowerCase() === "end") {
                     isInternalBlock = false;
-                }
-                else if (!isString && !isComment && isInternalBlock && lastWord(11).toLowerCase() === 'transaction') {
+                } else if (!isString && !isComment && isInternalBlock && lastWord(11).toLowerCase() === "transaction") {
                     isInternalBlock = false;
-                }
-                else if (!isString && !isComment && !isInternalBlock && char === ';') {
+                } else if (!isString && !isComment && !isInternalBlock && char === ';') {
                     isStmt = false;
                     if (statement) {
                         statement.position.end = [lineIndex, charIndex];
                         statements.push(statement);
                         statement = undefined;
                     }
-                }
-                else if (!isString && char === '\'') {
+                } else if (!isString && char === '\'') {
                     isString = true;
                     stringChar = '\'';
-                }
-                else if (!isString && char === '"') {
+                } else if (!isString && char === '"') {
                     isString = true;
                     stringChar = '"';
-                }
-                else if (isString && char === stringChar) {
+                } else if (isString && char === stringChar) {
                     isString = false;
                     stringChar = '';
                 }
-            }
-            else if (isComment && commentChar === '-') {
+            } else if (isComment && commentChar === '-') {
                 // skip char
-            }
-            else if (isComment && commentChar === '/') {
+            } else if (isComment && commentChar === '/') {
                 if (char === '/' && prevChar === '*') {
                     isComment = false;
                     commentChar = '';
                 }
-            }
-            else if (isCommand) {
+            } else if (isCommand) {
                 if (statement) { statement.sql += char; }
-            }
-            else if (char === ' ' || char === '\t') {
+            } else if (char === ' ' || char === '\t') {
                 // skip this char
-            }
-            else if (char === '-' && nextChar === '-') {
+            } else if (char === '-' && nextChar === '-') {
                 isComment = true;
                 commentChar = '-';
-            }
-            else if (char === '/' && nextChar === '*') {
+            } else if (char === '/' && nextChar === '*') {
                 isComment = true;
                 commentChar = '/';
-            }
-            else if (char === '.') {
+            } else if (char === '.') {
                 isCommand = true;
-                statement = { sql: char, position: { start: [lineIndex, charIndex], end: [lineIndex, charIndex] }, type: StatementType.COMMAND };
-            }
-            else if (char.match(/\w/)) {
+                statement = {sql: char, position: {start: [lineIndex, charIndex], end: [lineIndex, charIndex]}, type: StatementType.COMMAND};
+            } else if (char.match(/\w/)) {
                 isStmt = true;
-                statement = { sql: char, position: { start: [lineIndex, charIndex], end: [lineIndex, charIndex] }, type: StatementType.OTHER };
-            }
-            else {
-                throw Error('Not a valid query');
+                statement = {sql: char, position: {start: [lineIndex, charIndex], end: [lineIndex, charIndex]}, type: StatementType.OTHER};
+            } else {
+                throw Error("Not a valid query");
             }
         }
 
         if (isCommand) {
             isCommand = false;
             if (statement) {
-                statement.position.end = [lineIndex, line.length - 1];
+                statement.position.end = [lineIndex, line.length-1];
                 statements.push(statement);
                 statement = undefined;
             }
@@ -111,7 +94,7 @@ export function extractStatements(query: string): Statement[] {
             commentChar = '';
         }
         if (isStmt) {
-            if (statement) { statement.sql += '\n'; }
+            if (statement) { statement.sql += "\n"; }
         }
     }
 
@@ -126,7 +109,7 @@ export function extractStatements(query: string): Statement[] {
         statements.push(statement);
     }
 
-    statements.forEach(statement => statement.type = categorizeStatement(statement.sql));
+    statements.forEach(statement => statement.type = categorizeStatement(statement.sql) );
 
     return statements;
 }
@@ -137,23 +120,17 @@ function categorizeStatement(sql: string): StatementType {
     sql = sql.toLowerCase();
     if (sql.startsWith(StatementType.SELECT.toLowerCase())) {
         type = StatementType.SELECT;
-    }
-    else if (sql.startsWith(StatementType.INSERT.toLowerCase())) {
+    } else if (sql.startsWith(StatementType.INSERT.toLowerCase())) {
         type = StatementType.INSERT;
-    }
-    else if (sql.startsWith(StatementType.UPDATE.toLowerCase())) {
+    } else if (sql.startsWith(StatementType.UPDATE.toLowerCase())) {
         type = StatementType.UPDATE;
-    }
-    else if (sql.startsWith(StatementType.EXPLAIN.toLowerCase())) {
+    } else if (sql.startsWith(StatementType.EXPLAIN.toLowerCase())) {
         type = StatementType.EXPLAIN;
-    }
-    else if (sql.startsWith(StatementType.PRAGMA.toLowerCase())) {
+    } else if (sql.startsWith(StatementType.PRAGMA.toLowerCase())) {
         type = StatementType.PRAGMA;
-    }
-    else if (sql.startsWith('.')) {
+    } else if (sql.startsWith('.')) {
         type = StatementType.COMMAND;
-    }
-    else {
+    } else {
         type = StatementType.OTHER;
     }
 
